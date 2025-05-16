@@ -2,6 +2,8 @@
 
 Đây là bản demo của mô hình Vintern-1B-v3.5, có khả năng trích xuất văn bản từ hình ảnh và chuyển đổi sang định dạng markdown. Mô hình này đặc biệt tốt trong việc hiểu văn bản tiếng Việt, OCR và hiểu tài liệu.
 
+Mô hình đang sử dụng trên huggingface: https://huggingface.co/5CD-AI/Vintern-1B-v3_5
+
 ## Tính năng
 
 - Giao diện web đơn giản để chuyển đổi hình ảnh thành văn bản
