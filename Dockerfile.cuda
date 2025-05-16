@@ -1,0 +1,62 @@
+FROM --platform=linux/amd64 nvidia/cuda:11.8.0-cudnn8-runtime-ubuntu22.04 AS builder
+
+WORKDIR /app
+
+# Install Python and build dependencies
+RUN apt-get update && apt-get install -y \
+    python3.9 \
+    python3.9-dev \
+    python3.9-venv \
+    python3-pip \
+    build-essential \
+    libffi-dev \
+    && rm -rf /var/lib/apt/lists/*
+
+# Create and activate virtual environment
+RUN python3.9 -m venv /opt/venv
+ENV PATH="/opt/venv/bin:$PATH"
+
+# Copy requirements file
+COPY requirements.txt .
+
+# Install dependencies
+RUN pip install --no-cache-dir --upgrade pip && \
+    pip install --no-cache-dir -r requirements.txt
+
+# Second stage: runtime image
+FROM --platform=linux/amd64 nvidia/cuda:11.8.0-cudnn8-runtime-ubuntu22.04
+
+WORKDIR /app
+
+# Install Python runtime
+RUN apt-get update && apt-get install -y \
+    python3.9 \
+    python3.9-venv \
+    && rm -rf /var/lib/apt/lists/*
+
+# Copy virtual environment from builder stage
+COPY --from=builder /opt/venv /opt/venv
+ENV PATH="/opt/venv/bin:$PATH"
+
+# Copy application code
+COPY app.py .
+COPY detect_hardware.py .
+COPY static/ ./static/
+COPY index.html .
+# Set environment variables
+ENV PYTHONDONTWRITEBYTECODE=1
+ENV PYTHONUNBUFFERED=1
+
+# Set Vintern-specific environment variables
+ENV VINTERN_STREAM=false
+ENV VINTERN_MAX_TOKENS=1024
+ENV VINTERN_TEMPERATURE=0.0
+ENV VINTERN_DO_SAMPLE=false
+ENV VINTERN_NUM_BEAMS=3
+ENV VINTERN_REPETITION_PENALTY=2.5
+
+# Expose port for API
+EXPOSE 8000
+
+# Command to run the application
+CMD ["python3.9", "app.py"]
