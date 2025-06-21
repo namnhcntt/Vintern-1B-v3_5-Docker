@@ -2,10 +2,10 @@ fastapi==0.103.1
 uvicorn==0.23.2
 pydantic==2.3.0
 python-multipart==0.0.6
-torch==2.1.2
-torchvision==0.16.2
-transformers==4.38.0
-pillow==10.0.1
-numpy==1.24.3
-timm==0.9.12
-einops==0.7.0
+torch>=2.2.0
+torchvision>=0.16.2
+transformers>=4.38.0
+pillow>=10.0.1
+numpy>=1.24.3
+timm>=0.9.12
+einops>=0.7.0

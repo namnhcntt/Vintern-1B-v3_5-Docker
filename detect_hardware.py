@@ -218,12 +218,15 @@ def set_environment_variables(hardware):
 
 if __name__ == "__main__":
     hardware = detect_hardware()
-    print_hardware_info(hardware)
     best_hardware = set_environment_variables(hardware)
     
-    # If called with --json flag, print hardware info as JSON
+    # If called with --json flag, print hardware info as JSON and exit
     if len(sys.argv) > 1 and sys.argv[1] == '--json':
         print(json.dumps(hardware))
+        sys.exit(0)
+    
+    # Otherwise print human-readable format
+    print_hardware_info(hardware)
     
     # Exit with code that indicates the best hardware
     # This can be used by shell scripts
