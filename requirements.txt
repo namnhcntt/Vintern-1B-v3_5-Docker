@@ -9,3 +9,5 @@ pillow>=10.0.1
 numpy>=1.24.3
 timm>=0.9.12
 einops>=0.7.0
+pdf2image>=1.16.3
+PyMuPDF>=1.23.0

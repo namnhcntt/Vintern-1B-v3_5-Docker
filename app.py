@@ -19,6 +19,9 @@ import sys
 import os
 import socket
 import asyncio
+import fitz  # PyMuPDF
+from pdf2image import convert_from_bytes
+import tempfile
 
 app = FastAPI()
 
@@ -220,6 +223,31 @@ def dynamic_preprocess(image, min_num=1, max_num=12, image_size=448, use_thumbna
         processed_images.append(thumbnail_img)
     return processed_images
 
+def convert_pdf_to_images(pdf_data):
+    """Convert PDF bytes to list of PIL Images"""
+    try:
+        # Try using pdf2image first (better quality)
+        images = convert_from_bytes(pdf_data, dpi=200, fmt='RGB')
+        return images
+    except Exception as e:
+        print(f"pdf2image failed, trying PyMuPDF: {e}")
+        try:
+            # Fallback to PyMuPDF
+            doc = fitz.open(stream=pdf_data, filetype="pdf")
+            images = []
+            for page_num in range(len(doc)):
+                page = doc.load_page(page_num)
+                # Render page to image with higher resolution
+                mat = fitz.Matrix(2.0, 2.0)  # 2x zoom for better quality
+                pix = page.get_pixmap(matrix=mat)
+                img_data = pix.tobytes("ppm")
+                image = Image.open(io.BytesIO(img_data)).convert('RGB')
+                images.append(image)
+            doc.close()
+            return images
+        except Exception as e2:
+            raise HTTPException(status_code=400, detail=f"Failed to process PDF: {str(e2)}")
+
 def process_image(image_data, input_size=448, max_num=6):
     """Process image from bytes or base64 string"""
     # Convert base64 to image if needed
@@ -245,6 +273,135 @@ def process_image(image_data, input_size=448, max_num=6):
 
     return pixel_values
 
+def process_pdf(pdf_data, input_size=448, max_num=6):
+    """Process PDF by converting to images and then processing each page"""
+    images = convert_pdf_to_images(pdf_data)
+    all_pixel_values = []
+
+    for image in images:
+        # Convert PIL image to bytes for processing
+        img_byte_arr = io.BytesIO()
+        image.save(img_byte_arr, format='PNG')
+        img_byte_arr = img_byte_arr.getvalue()
+
+        # Process each page as an image
+        pixel_values = process_image(img_byte_arr, input_size, max_num)
+        all_pixel_values.append(pixel_values)
+
+    return all_pixel_values, len(images)
+
+# Prompt templates for structured data extraction
+PROMPT_TEMPLATES = {
+    "json": """Trích xuất thông tin từ hình ảnh và trả về dưới dạng JSON có cấu trúc.
+Hãy phân tích nội dung và tổ chức thông tin một cách logic.
+Trả về JSON hợp lệ với các trường phù hợp:
+
+```json
+{
+  "title": "Tiêu đề hoặc chủ đề chính",
+  "content": "Nội dung chính",
+  "details": {
+    "key1": "value1",
+    "key2": "value2"
+  },
+  "metadata": {
+    "type": "loại tài liệu",
+    "language": "ngôn ngữ",
+    "confidence": "độ tin cậy"
+  }
+}
+```""",
+
+    "yaml": """Trích xuất thông tin từ hình ảnh và trả về dưới dạng YAML có cấu trúc.
+Hãy phân tích nội dung và tổ chức thông tin một cách logic.
+Trả về YAML hợp lệ:
+
+```yaml
+title: "Tiêu đề hoặc chủ đề chính"
+content: "Nội dung chính"
+details:
+  key1: "value1"
+  key2: "value2"
+metadata:
+  type: "loại tài liệu"
+  language: "ngôn ngữ"
+  confidence: "độ tin cậy"
+```""",
+
+    "markdown": """Trích xuất thông tin từ hình ảnh và trả về dưới dạng Markdown có cấu trúc.
+Hãy phân tích nội dung và tổ chức thông tin một cách logic với các heading, list, table phù hợp.
+
+Sử dụng cấu trúc Markdown như:
+- # Tiêu đề chính
+- ## Tiêu đề phụ
+- **Văn bản in đậm**
+- *Văn bản in nghiêng*
+- - Danh sách
+- | Bảng | Dữ liệu |
+- > Trích dẫn
+- `Code` hoặc ```code block```""",
+
+    "table": """Trích xuất dữ liệu dạng bảng từ hình ảnh và trả về dưới dạng Markdown table.
+Nếu có nhiều bảng, hãy tách riêng từng bảng.
+Sử dụng format:
+
+| Cột 1 | Cột 2 | Cột 3 |
+|-------|-------|-------|
+| Dữ liệu 1 | Dữ liệu 2 | Dữ liệu 3 |""",
+
+    "invoice": """Trích xuất thông tin hóa đơn từ hình ảnh và trả về dưới dạng JSON có cấu trúc:
+
+```json
+{
+  "invoice_info": {
+    "number": "số hóa đơn",
+    "date": "ngày tháng",
+    "due_date": "hạn thanh toán"
+  },
+  "seller": {
+    "name": "tên người bán",
+    "address": "địa chỉ",
+    "tax_id": "mã số thuế",
+    "phone": "số điện thoại"
+  },
+  "buyer": {
+    "name": "tên người mua",
+    "address": "địa chỉ",
+    "tax_id": "mã số thuế"
+  },
+  "items": [
+    {
+      "description": "mô tả sản phẩm",
+      "quantity": "số lượng",
+      "unit_price": "đơn giá",
+      "total": "thành tiền"
+    }
+  ],
+  "totals": {
+    "subtotal": "tổng tiền hàng",
+    "tax": "thuế VAT",
+    "total": "tổng cộng"
+  }
+}
+```""",
+
+    "form": """Trích xuất thông tin từ form/biểu mẫu trong hình ảnh và trả về dưới dạng JSON:
+
+```json
+{
+  "form_type": "loại biểu mẫu",
+  "fields": {
+    "field_name_1": "giá trị 1",
+    "field_name_2": "giá trị 2",
+    "checkbox_field": true/false,
+    "date_field": "YYYY-MM-DD"
+  },
+  "signatures": ["vị trí chữ ký nếu có"],
+  "stamps": ["vị trí con dấu nếu có"]
+}
+```"""
+}
+
 class ImageToTextRequest(BaseModel):
     prompt: str
     image: Optional[str] = None  # Base64 encoded image
@@ -254,29 +411,39 @@ class ImageToTextRequest(BaseModel):
     num_beams: Optional[int] = DEFAULT_NUM_BEAMS
     repetition_penalty: Optional[float] = DEFAULT_REPETITION_PENALTY
     stream: Optional[bool] = DEFAULT_STREAM  # Whether to stream the response
+    template: Optional[str] = None  # Template type for structured output
 
 @app.on_event("startup")
 async def startup_event():
     # Load model at startup
-    load_model()
+    try:
+        load_model()
+        print("Model loaded successfully at startup")
+    except Exception as e:
+        print(f"Warning: Failed to load model at startup: {e}")
+        print("Model will be loaded on first request")
 
 @app.get("/", response_class=HTMLResponse)
 async def root():
     """Serve the index.html file"""
-    # First try to serve from the root directory
-    root_index_path = pathlib.Path(__file__).parent / "index.html"
-    if root_index_path.exists():
-        with open(root_index_path, "r") as f:
-            return f.read()
+    try:
+        # First try to serve from the root directory
+        root_index_path = pathlib.Path(__file__).parent / "index.html"
+        if root_index_path.exists():
+            with open(root_index_path, "r", encoding="utf-8") as f:
+                return f.read()
 
-    # Fallback to static directory for Docker compatibility
-    index_path = static_dir / "index.html"
-    if index_path.exists():
-        with open(index_path, "r") as f:
-            return f.read()
-    else:
+        # Fallback to static directory for Docker compatibility
+        index_path = static_dir / "index.html"
+        if index_path.exists():
+            with open(index_path, "r", encoding="utf-8") as f:
+                return f.read()
+    except Exception as e:
+        print(f"Error reading index.html: {e}")
         # Return a simple HTML page instead of a dict to avoid encoding error
-        return """
+
+    # Return a simple HTML page instead of a dict to avoid encoding error
+    return """
         <!DOCTYPE html>
         <html>
         <head>
@@ -310,6 +477,19 @@ async def root():
 async def api_info():
     """API information endpoint"""
     return {"message": "Vintern-1B Image-to-Text API is running", "version": "1.0.0"}
+
+@app.get("/api/templates")
+async def get_templates():
+    """Get available prompt templates"""
+    return {
+        "templates": {
+            name: {
+                "name": name,
+                "description": f"Template for {name} structured output"
+            }
+            for name in PROMPT_TEMPLATES.keys()
+        }
+    }
 
 async def generate_streaming_response(
     pixel_values,
@@ -364,6 +544,12 @@ async def image_to_text(request: ImageToTextRequest):
 
         pixel_values = process_image(request.image)
 
+        # Prepare prompt with template if specified
+        final_prompt = request.prompt
+        if request.template and request.template in PROMPT_TEMPLATES:
+            template_prompt = PROMPT_TEMPLATES[request.template]
+            final_prompt = f"{template_prompt}\n\nYêu cầu bổ sung: {request.prompt}" if request.prompt.strip() else template_prompt
+
         # Configure generation parameters
         generation_config = {
             "max_new_tokens": request.max_tokens,
@@ -378,7 +564,7 @@ async def image_to_text(request: ImageToTextRequest):
             return StreamingResponse(
                 generate_streaming_response(
                     pixel_values,
-                    request.prompt,
+                    final_prompt,
                     generation_config,
                     model,
                     tokenizer
@@ -390,13 +576,13 @@ async def image_to_text(request: ImageToTextRequest):
             response, _ = model.chat(
                 tokenizer,
                 pixel_values,
-                request.prompt,
+                final_prompt,
                 generation_config,
                 history=None,
                 return_history=True
             )
 
-            return {"text": response}
+            return {"text": response, "template_used": request.template}
 
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error processing image: {str(e)}")
@@ -411,50 +597,106 @@ async def upload_image(
     do_sample: bool = Form(DEFAULT_DO_SAMPLE),
     num_beams: int = Form(DEFAULT_NUM_BEAMS),
     repetition_penalty: float = Form(DEFAULT_REPETITION_PENALTY),
-    stream: bool = Form(DEFAULT_STREAM)
+    stream: bool = Form(DEFAULT_STREAM),
+    template: str = Form("")
 ):
     try:
         # Ensure model is loaded
         if model is None or tokenizer is None:
             load_model()
 
-        # Read and process the uploaded file
-        image_data = await file.read()
-        pixel_values = process_image(image_data)
+        # Read the uploaded file
+        file_data = await file.read()
 
-        # Configure generation parameters
-        generation_config = {
-            "max_new_tokens": max_tokens,
-            "do_sample": do_sample,
-            "num_beams": num_beams,
-            "repetition_penalty": repetition_penalty
-        }
+        # Check file type and process accordingly
+        if file.content_type == "application/pdf" or file.filename.lower().endswith('.pdf'):
+            # Process PDF file
+            all_pixel_values, num_pages = process_pdf(file_data)
 
-        # Check if streaming is requested
-        if stream:
-            # Return a streaming response
-            return StreamingResponse(
-                generate_streaming_response(
+            # Prepare prompt with template if specified
+            final_prompt = prompt
+            print(f"DEBUG: template = '{template}', type = {type(template)}")
+            print(f"DEBUG: template in PROMPT_TEMPLATES = {template in PROMPT_TEMPLATES if template else False}")
+            if template and template.strip() and template in PROMPT_TEMPLATES:
+                template_prompt = PROMPT_TEMPLATES[template]
+                final_prompt = f"{template_prompt}\n\nYêu cầu bổ sung: {prompt}" if prompt.strip() else template_prompt
+                print(f"DEBUG: Using template '{template}'")
+            else:
+                print(f"DEBUG: No template used")
+
+            # Process each page and combine results
+            all_responses = []
+            for i, pixel_values in enumerate(all_pixel_values):
+                page_prompt = f"Trang {i+1}/{num_pages}: {final_prompt}"
+
+                # Configure generation parameters
+                generation_config = {
+                    "max_new_tokens": max_tokens,
+                    "do_sample": do_sample,
+                    "num_beams": num_beams,
+                    "repetition_penalty": repetition_penalty
+                }
+
+                # Generate text from image (non-streaming for PDF)
+                response, _ = model.chat(
+                    tokenizer,
                     pixel_values,
-                    prompt,
+                    page_prompt,
                     generation_config,
-                    model,
-                    tokenizer
-                ),
-                media_type="text/event-stream"
-            )
-        else:
-            # Generate text from image (non-streaming)
-            response, _ = model.chat(
-                tokenizer,
-                pixel_values,
-                prompt,
-                generation_config,
-                history=None,
-                return_history=True
-            )
+                    history=None,
+                    return_history=True
+                )
+                all_responses.append(f"## Trang {i+1}\n\n{response}")
 
-            return {"text": response}
+            # Combine all pages
+            combined_response = "\n\n".join(all_responses)
+            template_used = template if template and template.strip() and template in PROMPT_TEMPLATES else None
+            return {"text": combined_response, "pages": num_pages, "template_used": template_used}
+
+        else:
+            # Process as image
+            pixel_values = process_image(file_data)
+
+            # Prepare prompt with template if specified
+            final_prompt = prompt
+            if template and template.strip() and template in PROMPT_TEMPLATES:
+                template_prompt = PROMPT_TEMPLATES[template]
+                final_prompt = f"{template_prompt}\n\nYêu cầu bổ sung: {prompt}" if prompt.strip() else template_prompt
+
+            # Configure generation parameters
+            generation_config = {
+                "max_new_tokens": max_tokens,
+                "do_sample": do_sample,
+                "num_beams": num_beams,
+                "repetition_penalty": repetition_penalty
+            }
+
+            # Check if streaming is requested
+            if stream:
+                # Return a streaming response
+                return StreamingResponse(
+                    generate_streaming_response(
+                        pixel_values,
+                        final_prompt,
+                        generation_config,
+                        model,
+                        tokenizer
+                    ),
+                    media_type="text/event-stream"
+                )
+            else:
+                # Generate text from image (non-streaming)
+                response, _ = model.chat(
+                    tokenizer,
+                    pixel_values,
+                    final_prompt,
+                    generation_config,
+                    history=None,
+                    return_history=True
+                )
+
+                template_used = template if template and template.strip() and template in PROMPT_TEMPLATES else None
+                return {"text": response, "template_used": template_used}
 
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error processing image: {str(e)}")

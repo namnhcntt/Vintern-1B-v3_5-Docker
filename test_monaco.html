@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Monaco Editor</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/monaco-editor@0.44.0/min/vs/loader.js"></script>
+</head>
+<body>
+    <div class="container mt-5">
+        <h1>Test Monaco Editor</h1>
+        <div class="row">
+            <div class="col-md-6">
+                <label class="form-label">Template:</label>
+                <select id="templateSelect" class="form-select mb-3">
+                    <option value="">Không sử dụng template</option>
+                    <option value="json">JSON</option>
+                    <option value="yaml">YAML</option>
+                    <option value="markdown">Markdown</option>
+                </select>
+                
+                <label class="form-label">Monaco Editor:</label>
+                <div id="promptEditor" style="height: 300px; border: 1px solid #ced4da; border-radius: 0.375rem;"></div>
+                
+                <button id="getValueBtn" class="btn btn-primary mt-3">Get Value</button>
+            </div>
+            <div class="col-md-6">
+                <label class="form-label">Output:</label>
+                <pre id="output" class="border p-3" style="height: 400px; overflow-y: auto;"></pre>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let promptEditor = null;
+        
+        // Template prompts
+        const templatePrompts = {
+            '': 'Trích xuất thông tin chính trong ảnh và trả về dạng markdown.',
+            'json': `Trích xuất thông tin từ hình ảnh và trả về dưới dạng JSON với cấu trúc:
+{
+  "title": "tiêu đề chính",
+  "content": "nội dung chính",
+  "details": {
+    "danh_sach": [{
+      "stt": "Số thứ tự của dòng, cột đầu tiên",
+      "noidung": "Nội dung, cột thứ 2",
+      "so_tien": "Số tiền, cột thứ 3"
+    }]
+  },
+  "tong_tien": "Tổng số tiền trong bảng"
+}`,
+            'yaml': `Trích xuất thông tin từ hình ảnh và trả về dưới dạng YAML với cấu trúc:
+title: "tiêu đề chính"
+content: "nội dung chính"
+details:
+  key1: "value1"
+  key2: "value2"`,
+            'markdown': `Trích xuất thông tin từ hình ảnh và trả về dưới dạng Markdown với cấu trúc:
+
+# Tiêu đề chính
+
+## Phần 1
+- Điểm 1
+- Điểm 2
+
+## Phần 2
+| Cột 1 | Cột 2 |
+|-------|-------|
+| Data1 | Data2 |`
+        };
+
+        // Initialize Monaco Editor
+        require.config({ paths: { vs: 'https://cdn.jsdelivr.net/npm/monaco-editor@0.44.0/min/vs' } });
+        require(['vs/editor/editor.main'], function () {
+            promptEditor = monaco.editor.create(document.getElementById('promptEditor'), {
+                value: templatePrompts[''],
+                language: 'markdown',
+                theme: 'vs',
+                automaticLayout: true,
+                wordWrap: 'on',
+                minimap: { enabled: false },
+                scrollBeyondLastLine: false,
+                fontSize: 14,
+                lineNumbers: 'on',
+                folding: true
+            });
+        });
+
+        // Template change handler
+        document.getElementById('templateSelect').addEventListener('change', function() {
+            const selectedTemplate = this.value;
+            const prompt = templatePrompts[selectedTemplate] || templatePrompts[''];
+            
+            if (promptEditor) {
+                promptEditor.setValue(prompt);
+                
+                // Set language based on template
+                let language = 'markdown';
+                if (selectedTemplate === 'json') {
+                    language = 'json';
+                } else if (selectedTemplate === 'yaml') {
+                    language = 'yaml';
+                }
+                monaco.editor.setModelLanguage(promptEditor.getModel(), language);
+            }
+        });
+
+        // Get value button
+        document.getElementById('getValueBtn').addEventListener('click', function() {
+            if (promptEditor) {
+                const value = promptEditor.getValue();
+                document.getElementById('output').textContent = value;
+            }
+        });
+    </script>
+</body>
+</html>

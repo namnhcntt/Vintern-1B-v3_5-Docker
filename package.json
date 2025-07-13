@@ -1,0 +1,21 @@
+{
+  "name": "vintern-1b-mcp",
+  "version": "1.1.0",
+  "description": "MCP server for Vintern-1B OCR application",
+  "main": "index.js",
+  "scripts": {
+    "start": "npx @playwright/mcp",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "mcp",
+    "playwright",
+    "ocr",
+    "vintern"
+  ],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@playwright/mcp": "^0.0.29"
+  }
+}

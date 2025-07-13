@@ -1,11 +1,11 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="vi">
 
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <base href="/">
-    <title>Vintern-1B Image to Text Demo</title>
+    <title>Demo Vintern-1B Chuyển Đổi Hình Ảnh Thành Văn Bản</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
     <!-- GitHub Markdown CSS -->
@@ -160,8 +160,8 @@
     <div class="container">
         <div class="row">
             <div class="col-md-12 text-center mb-4">
-                <h1 class="display-5">Vintern-1B Image to Text Demo</h1>
-                <p class="lead">Convert images to markdown text using the Vintern-1B-v3.5 model</p>
+                <h1 class="display-5">Demo Vintern-1B Chuyển Đổi Hình Ảnh Thành Văn Bản</h1>
+                <p class="lead">Chuyển đổi hình ảnh thành văn bản markdown sử dụng mô hình Vintern-1B-v3.5</p>
             </div>
         </div>
 
@@ -169,28 +169,64 @@
             <div class="col-md-6">
                 <div class="card">
                     <div class="card-header">
-                        <h5 class="card-title mb-0"><i class="bi bi-image"></i> Image Input</h5>
+                        <h5 class="card-title mb-0"><i class="bi bi-image"></i> Tải Lên Hình Ảnh</h5>
                     </div>
                     <div class="card-body">
                         <div id="dragArea" class="drag-area">
                             <i class="bi bi-cloud-arrow-up" style="font-size: 3rem;"></i>
-                            <p>Drag & Drop image or <strong>Click to upload</strong></p>
-                            <p class="file-info">Supported formats: JPG, PNG, GIF, BMP</p>
-                            <input type="file" id="fileInput" accept="image/*" hidden>
+                            <p>Kéo thả hình ảnh/PDF hoặc <strong>Nhấp để tải lên</strong></p>
+                            <p class="file-info">Định dạng hỗ trợ: JPG, PNG, GIF, BMP, PDF</p>
+                            <input type="file" id="fileInput" accept="image/*,.pdf" hidden>
                         </div>
 
                         <div class="preview-container mt-3" style="display: none;">
-                            <img id="imagePreview" src="#" alt="Image Preview">
+                            <img id="imagePreview" src="#" alt="Xem trước hình ảnh">
+                        </div>
+
+                        <div class="template-selection mt-3">
+                            <label for="templateSelect" class="form-label">Template (Tùy chọn):</label>
+                            <select id="templateSelect" class="form-select">
+                                <option value="">Không sử dụng template</option>
+                                <option value="json">JSON - Dữ liệu có cấu trúc JSON</option>
+                                <option value="yaml">YAML - Dữ liệu có cấu trúc YAML</option>
+                                <option value="markdown">Markdown - Định dạng Markdown có cấu trúc</option>
+                                <option value="table">Table - Trích xuất bảng dữ liệu</option>
+                                <option value="invoice">Invoice - Thông tin hóa đơn</option>
+                                <option value="form">Form - Thông tin biểu mẫu</option>
+                            </select>
+                        </div>
+
+                        <!-- Template Helper Guide -->
+                        <div id="templateHelper" class="mt-3" style="display: none;">
+                            <div class="card border-info">
+                                <div class="card-header bg-info text-white">
+                                    <h6 class="mb-0"><i class="bi bi-info-circle"></i> Hướng dẫn Template</h6>
+                                </div>
+                                <div class="card-body">
+                                    <div id="templateHelperContent">
+                                        <!-- Content will be dynamically updated -->
+                                    </div>
+                                </div>
+                            </div>
                         </div>
 
                         <div class="prompt-input mt-3">
-                            <label for="promptInput" class="form-label">Prompt:</label>
-                            <textarea id="promptInput" class="form-control"
-                                rows="2">Trích xuất thông tin chính trong ảnh và trả về dạng markdown.</textarea>
+                            <label for="promptInput" class="form-label">Lời nhắc (Prompt):</label>
+                            <div id="promptEditor"
+                                style="height: 200px; border: 1px solid #ced4da; border-radius: 0.375rem;"></div>
+                            <small class="form-text text-muted">
+                                <i class="bi bi-info-circle"></i> Bạn có thể chỉnh sửa prompt để tùy chỉnh cấu trúc kết
+                                quả đầu ra.
+                                Hỗ trợ syntax highlighting và auto-completion.
+                            </small>
                         </div>
 
-                        <button id="processBtn" class="btn btn-primary w-100" disabled>
-                            <i class="bi bi-magic"></i> Process Image
+                        <div id="estimatedTime" class="alert alert-info mt-3" style="display: none;">
+                            <i class="bi bi-clock"></i> <span id="estimatedTimeText">Ước tính thời gian xử lý: --</span>
+                        </div>
+
+                        <button id="processBtn" class="btn btn-primary w-100 mt-3" disabled>
+                            <i class="bi bi-magic"></i> Xử Lý Hình Ảnh/PDF
                         </button>
                     </div>
                 </div>
@@ -199,33 +235,43 @@
             <div class="col-md-6">
                 <div class="card">
                     <div class="card-header d-flex justify-content-between align-items-center">
-                        <h5 class="card-title mb-0"><i class="bi bi-markdown"></i> Markdown Output</h5>
+                        <h5 id="outputTitle" class="card-title mb-0"><i class="bi bi-markdown"></i> Kết Quả Markdown
+                        </h5>
                         <div class="output-actions">
-                            <div class="btn-group" role="group" aria-label="View mode">
+                            <div class="btn-group" role="group" aria-label="Chế độ xem">
                                 <button id="viewRenderedBtn" type="button"
                                     class="btn btn-sm btn-outline-primary active">
-                                    <i class="bi bi-eye"></i> Rendered
+                                    <i class="bi bi-eye"></i> Hiển Thị
                                 </button>
                                 <button id="viewSourceBtn" type="button" class="btn btn-sm btn-outline-primary">
-                                    <i class="bi bi-code-slash"></i> Source
+                                    <i class="bi bi-code-slash"></i> Mã Nguồn
                                 </button>
                             </div>
                             <button id="copyBtn" class="btn btn-sm btn-outline-secondary" disabled>
-                                <i class="bi bi-clipboard"></i> Copy
+                                <i class="bi bi-clipboard"></i> Sao Chép
                             </button>
                         </div>
                     </div>
                     <div class="card-body">
                         <div class="loading" id="loadingIndicator">
                             <div class="d-flex align-items-center justify-content-center">
-                                <div class="spinner-border text-primary" role="status"></div>
-                                <span>Processing image, please wait...</span>
+                                <div class="spinner-border text-primary me-3" role="status"></div>
+                                <div>
+                                    <div>Đang xử lý hình ảnh, vui lòng đợi...</div>
+                                    <div id="progressInfo" class="small text-muted mt-1" style="display: none;">
+                                        <div class="progress mt-2" style="height: 4px;">
+                                            <div id="progressBar" class="progress-bar" role="progressbar"
+                                                style="width: 0%"></div>
+                                        </div>
+                                        <div id="progressText" class="mt-1">Thời gian còn lại: --</div>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                         <div id="markdownOutput" class="markdown-body">
                             <div class="text-center text-muted">
                                 <i class="bi bi-file-earmark-text" style="font-size: 3rem;"></i>
-                                <p>Upload an image to see the extracted text here</p>
+                                <p>Tải lên hình ảnh để xem văn bản được trích xuất tại đây</p>
                             </div>
                         </div>
                         <div id="markdownSource" class="d-none">
@@ -240,41 +286,36 @@
             <div class="col-md-12">
                 <div class="card">
                     <div class="card-header">
-                        <h5 class="card-title mb-0"><i class="bi bi-gear"></i> API Settings</h5>
+                        <h5 class="card-title mb-0"><i class="bi bi-gear"></i> Cài Đặt API</h5>
                     </div>
                     <div class="card-body">
                         <div class="mb-3">
-                            <label for="apiUrlInput" class="form-label">API URL:</label>
+                            <label for="apiUrlInput" class="form-label">Địa chỉ API:</label>
                             <input type="text" id="apiUrlInput" class="form-control" value="http://localhost:8000">
                         </div>
                         <div class="row">
                             <div class="col">
                                 <div class="mb-3">
-                                    <label for="maxTokensInput" class="form-label">Max Tokens:</label>
+                                    <label for="maxTokensInput" class="form-label">Số Token Tối Đa:</label>
                                     <input type="number" id="maxTokensInput" class="form-control" value="1024" min="1"
                                         max="4096">
                                 </div>
                             </div>
                             <div class="col">
                                 <div class="mb-3">
-                                    <label for="temperatureInput" class="form-label">Temperature:</label>
+                                    <label for="temperatureInput" class="form-label">Nhiệt Độ (Temperature):</label>
                                     <input type="number" id="temperatureInput" class="form-control" value="0.0" min="0"
                                         max="1" step="0.1">
                                 </div>
                             </div>
                             <div class="col">
                                 <div class="mb-3">
-                                    <label for="beamsInput" class="form-label">Num Beams:</label>
+                                    <label for="beamsInput" class="form-label">Số Beam:</label>
                                     <input type="number" id="beamsInput" class="form-control" value="3" min="1"
                                         max="10">
                                 </div>
                             </div>
-                            <div class="col">
-                                <div class="mb-3 form-check mt-4">
-                                    <input type="checkbox" class="form-check-input" id="streamingInput">
-                                    <label class="form-check-label" for="streamingInput">Enable Streaming</label>
-                                </div>
-                            </div>
+
                         </div>
                     </div>
                 </div>
@@ -288,281 +329,700 @@
     <!-- Highlight.js for code syntax highlighting -->
     <script src="https://cdn.jsdelivr.net/npm/highlight.js@11.7.0/lib/highlight.min.js"></script>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/highlight.js@11.7.0/styles/github.min.css">
+    <!-- Monaco Editor -->
+    <script src="https://cdn.jsdelivr.net/npm/monaco-editor@0.44.0/min/vs/loader.js"></script>
     <script>
-        // Initialize markdown-it with options
+        // Initialize markdown-it without highlight.js for now
         const md = window.markdownit({
             html: true,
             linkify: true,
-            typographer: true,
-            highlight: function (str, lang) {
-                if (lang && hljs.getLanguage(lang)) {
-                    try {
-                        return hljs.highlight(str, { language: lang }).value;
-                    } catch (__) { }
+            typographer: true
+        });
+
+        // Make md available globally
+        window.md = md;
+
+        // Wait for all scripts to load before initializing
+        document.addEventListener('DOMContentLoaded', function () {
+
+            // Elements
+            const dragArea = document.getElementById('dragArea');
+            const fileInput = document.getElementById('fileInput');
+            const imagePreview = document.getElementById('imagePreview');
+            const previewContainer = document.querySelector('.preview-container');
+            const processBtn = document.getElementById('processBtn');
+            const markdownOutput = document.getElementById('markdownOutput');
+            const markdownSource = document.getElementById('markdownSource');
+            const sourceCode = document.getElementById('sourceCode');
+            const viewRenderedBtn = document.getElementById('viewRenderedBtn');
+            const viewSourceBtn = document.getElementById('viewSourceBtn');
+            const copyBtn = document.getElementById('copyBtn');
+            const loadingIndicator = document.getElementById('loadingIndicator');
+            const apiUrlInput = document.getElementById('apiUrlInput');
+            const maxTokensInput = document.getElementById('maxTokensInput');
+            const temperatureInput = document.getElementById('temperatureInput');
+            const beamsInput = document.getElementById('beamsInput');
+            const templateSelect = document.getElementById('templateSelect');
+            const templateHelper = document.getElementById('templateHelper');
+            const templateHelperContent = document.getElementById('templateHelperContent');
+            const estimatedTimeDiv = document.getElementById('estimatedTime');
+            const estimatedTimeText = document.getElementById('estimatedTimeText');
+            const progressInfo = document.getElementById('progressInfo');
+            const progressBar = document.getElementById('progressBar');
+            const progressText = document.getElementById('progressText');
+            const outputTitle = document.getElementById('outputTitle');
+
+            // Store the original markdown text
+            let originalMarkdownText = '';
+
+            // Monaco Editor instance
+            let promptEditor = null;
+
+
+
+            // Template information and helpers
+            const templateInfo = {
+                '': {
+                    title: 'Kết Quả Markdown',
+                    icon: 'bi-markdown',
+                    prompt: 'Trích xuất thông tin chính trong ảnh và trả về dạng markdown.',
+                    helper: null
+                },
+                'json': {
+                    title: 'Kết Quả JSON',
+                    icon: 'bi-braces',
+                    prompt: 'Trích xuất thông tin từ hình ảnh và trả về dưới dạng JSON với cấu trúc:\n{\n  "title": "tiêu đề chính",\n  "content": "nội dung chính",\n  "details": {\n    // Thêm các trường cần thiết ở đây\n  }\n}',
+                    helper: {
+                        title: 'Hướng dẫn tùy chỉnh JSON',
+                        description: 'Bạn có thể tùy chỉnh cấu trúc JSON theo nhu cầu',
+                        examples: [
+                            'Thay đổi tên các trường trong JSON (ví dụ: "name", "address", "phone")',
+                            'Thêm/bớt các trường trong object "details"',
+                            'Tùy chỉnh cấu trúc nested objects theo dữ liệu cần trích xuất'
+                        ],
+                        tips: [
+                            'Sửa đổi cấu trúc JSON trong prompt để phù hợp với dữ liệu của bạn',
+                            'Có thể thêm mô tả cụ thể cho từng trường cần trích xuất',
+                            'Ví dụ: thay "details" thành "contact_info" cho danh thiếp'
+                        ]
+                    }
+                },
+                'yaml': {
+                    title: 'Kết Quả YAML',
+                    icon: 'bi-file-code',
+                    prompt: 'Trích xuất thông tin từ hình ảnh và trả về dưới dạng YAML với cấu trúc:\ntitle: "tiêu đề chính"\ncontent: "nội dung chính"\ndetails:\n  # Thêm các trường cần thiết ở đây\n  key1: "value1"\n  key2: "value2"',
+                    helper: {
+                        title: 'Hướng dẫn tùy chỉnh YAML',
+                        description: 'Bạn có thể tùy chỉnh cấu trúc YAML theo nhu cầu',
+                        examples: [
+                            'Thay đổi tên các trường YAML (ví dụ: "product_name", "price", "description")',
+                            'Thêm/bớt các trường con trong "details"',
+                            'Tạo cấu trúc phân cấp phù hợp với dữ liệu'
+                        ],
+                        tips: [
+                            'Sửa đổi cấu trúc YAML trong prompt để phù hợp với dữ liệu',
+                            'Có thể thêm comments (# ) để mô tả từng trường',
+                            'YAML dễ đọc và phù hợp cho cấu hình'
+                        ]
+                    }
+                },
+                'markdown': {
+                    title: 'Kết Quả Markdown',
+                    icon: 'bi-markdown',
+                    prompt: 'Trích xuất thông tin từ hình ảnh và trả về dưới dạng Markdown với cấu trúc:\n\n# Tiêu đề chính\n\n## Phần 1\n- Điểm 1\n- Điểm 2\n\n## Phần 2\n| Cột 1 | Cột 2 |\n|-------|-------|\n| Data1 | Data2 |\n\n**Ghi chú:** Tùy chỉnh cấu trúc theo nhu cầu',
+                    helper: {
+                        title: 'Hướng dẫn tùy chỉnh Markdown',
+                        description: 'Bạn có thể tùy chỉnh cấu trúc Markdown theo nhu cầu',
+                        examples: [
+                            'Thay đổi tiêu đề và phân cấp heading (# ## ###)',
+                            'Tùy chỉnh cấu trúc bảng với các cột phù hợp',
+                            'Thêm/bớt sections theo nội dung cần trích xuất'
+                        ],
+                        tips: [
+                            'Sửa đổi template Markdown để phù hợp với layout mong muốn',
+                            'Có thể thêm mô tả cụ thể cho từng section',
+                            'Sử dụng **bold**, *italic*, `code` để format'
+                        ]
+                    }
+                },
+                'table': {
+                    title: 'Kết Quả Bảng',
+                    icon: 'bi-table',
+                    prompt: 'Trích xuất dữ liệu bảng từ hình ảnh và trả về dưới dạng Markdown table:\n\n| Cột 1 | Cột 2 | Cột 3 |\n|-------|-------|-------|\n| Data1 | Data2 | Data3 |\n\nTùy chỉnh tên cột và số lượng cột theo bảng trong ảnh.',
+                    helper: {
+                        title: 'Hướng dẫn tùy chỉnh Table',
+                        description: 'Bạn có thể tùy chỉnh cấu trúc bảng theo dữ liệu thực tế',
+                        examples: [
+                            'Thay đổi tên cột phù hợp (ví dụ: "Tên sản phẩm", "Giá", "Số lượng")',
+                            'Thêm/bớt số lượng cột theo bảng trong ảnh',
+                            'Có thể yêu cầu nhiều bảng nếu ảnh có nhiều bảng'
+                        ],
+                        tips: [
+                            'Sửa đổi template bảng để match với cấu trúc thực tế',
+                            'Có thể thêm mô tả cho từng cột cần trích xuất',
+                            'Nếu có nhiều bảng, có thể yêu cầu tách riêng'
+                        ]
+                    }
+                },
+                'invoice': {
+                    title: 'Kết Quả Hóa Đơn',
+                    icon: 'bi-receipt',
+                    prompt: 'Trích xuất thông tin hóa đơn từ hình ảnh và trả về JSON:\n{\n  "invoice_number": "",\n  "date": "",\n  "seller": {\n    "name": "",\n    "address": ""\n  },\n  "buyer": {\n    "name": "",\n    "address": ""\n  },\n  "items": [\n    {\n      "description": "",\n      "quantity": "",\n      "price": "",\n      "total": ""\n    }\n  ],\n  "total_amount": ""\n}\n\nTùy chỉnh các trường theo loại hóa đơn cụ thể.',
+                    helper: {
+                        title: 'Hướng dẫn tùy chỉnh Invoice',
+                        description: 'Bạn có thể tùy chỉnh cấu trúc hóa đơn theo loại hóa đơn cụ thể',
+                        examples: [
+                            'Thêm trường "tax_id", "phone" cho seller/buyer nếu cần',
+                            'Tùy chỉnh trường items theo sản phẩm/dịch vụ',
+                            'Thêm trường "tax", "discount" nếu hóa đơn có'
+                        ],
+                        tips: [
+                            'Sửa đổi cấu trúc JSON để phù hợp với loại hóa đơn',
+                            'Có thể bỏ các trường không cần thiết',
+                            'Thêm mô tả cụ thể cho từng trường cần trích xuất'
+                        ]
+                    }
+                },
+                'form': {
+                    title: 'Kết Quả Biểu Mẫu',
+                    icon: 'bi-file-text',
+                    prompt: 'Trích xuất thông tin biểu mẫu từ hình ảnh và trả về JSON:\n{\n  "form_type": "loại biểu mẫu",\n  "fields": {\n    "field_1": "giá trị 1",\n    "field_2": "giá trị 2",\n    "checkbox_field": true/false\n  },\n  "signatures": [],\n  "date": ""\n}\n\nTùy chỉnh tên các trường theo biểu mẫu cụ thể.',
+                    helper: {
+                        title: 'Hướng dẫn tùy chỉnh Form',
+                        description: 'Bạn có thể tùy chỉnh cấu trúc form theo biểu mẫu cụ thể',
+                        examples: [
+                            'Thay đổi tên trường theo form thực tế (ví dụ: "full_name", "email", "phone")',
+                            'Thêm/bớt trường theo số lượng field trong form',
+                            'Tùy chỉnh kiểu dữ liệu (text, checkbox, date, etc.)'
+                        ],
+                        tips: [
+                            'Sửa đổi cấu trúc JSON để match với form thực tế',
+                            'Có thể thêm validation rules cho từng trường',
+                            'Mô tả rõ loại dữ liệu mong muốn cho từng field'
+                        ]
+                    }
                 }
-                return ''; // use external default escaping
+            };
+
+            // Function to get prompt value from Monaco Editor
+            function getPromptValue() {
+                return promptEditor ? promptEditor.getValue() : '';
             }
-        });
 
-        // Elements
-        const dragArea = document.getElementById('dragArea');
-        const fileInput = document.getElementById('fileInput');
-        const imagePreview = document.getElementById('imagePreview');
-        const previewContainer = document.querySelector('.preview-container');
-        const processBtn = document.getElementById('processBtn');
-        const markdownOutput = document.getElementById('markdownOutput');
-        const markdownSource = document.getElementById('markdownSource');
-        const sourceCode = document.getElementById('sourceCode');
-        const viewRenderedBtn = document.getElementById('viewRenderedBtn');
-        const viewSourceBtn = document.getElementById('viewSourceBtn');
-        const copyBtn = document.getElementById('copyBtn');
-        const loadingIndicator = document.getElementById('loadingIndicator');
-        const promptInput = document.getElementById('promptInput');
-        const apiUrlInput = document.getElementById('apiUrlInput');
-        const maxTokensInput = document.getElementById('maxTokensInput');
-        const temperatureInput = document.getElementById('temperatureInput');
-        const beamsInput = document.getElementById('beamsInput');
-        const streamingInput = document.getElementById('streamingInput');
+            // Function to update output title based on selected template
+            function updateOutputTitle() {
+                const selectedTemplate = templateSelect.value;
+                const info = templateInfo[selectedTemplate] || templateInfo[''];
+                outputTitle.innerHTML = `<i class="bi ${info.icon}"></i> ${info.title}`;
+            }
 
-        // Store the original markdown text
-        let originalMarkdownText = '';
+            // Function to update prompt and helper when template changes
+            function updateTemplatePromptAndHelper() {
+                const selectedTemplate = templateSelect.value;
+                const info = templateInfo[selectedTemplate] || templateInfo[''];
 
-        // Event listeners for drag and drop
-        ['dragover', 'dragenter'].forEach(eventName => {
-            dragArea.addEventListener(eventName, (e) => {
+                // Update prompt editor
+                if (promptEditor) {
+                    promptEditor.setValue(info.prompt);
+
+                    // Set appropriate language based on template
+                    let language = 'markdown';
+                    if (selectedTemplate === 'json' || selectedTemplate === 'invoice' || selectedTemplate === 'form') {
+                        language = 'json';
+                    } else if (selectedTemplate === 'yaml') {
+                        language = 'yaml';
+                    }
+                    monaco.editor.setModelLanguage(promptEditor.getModel(), language);
+                }
+
+                // Update helper display
+                if (info.helper) {
+                    templateHelperContent.innerHTML = `
+                    <h6 class="text-primary mb-3"><i class="bi bi-gear"></i> ${info.helper.title}</h6>
+                    <div class="alert alert-light border-primary">
+                        <p class="mb-0"><i class="bi bi-info-circle text-primary"></i> ${info.helper.description}</p>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h6 class="text-success"><i class="bi bi-lightbulb"></i> Cách tùy chỉnh:</h6>
+                            <ul class="list-unstyled">
+                                ${info.helper.examples.map(example => `<li class="mb-2"><i class="bi bi-arrow-right text-success"></i> ${example}</li>`).join('')}
+                            </ul>
+                        </div>
+                        <div class="col-md-6">
+                            <h6 class="text-info"><i class="bi bi-exclamation-triangle"></i> Gợi ý:</h6>
+                            <ul class="list-unstyled">
+                                ${info.helper.tips.map(tip => `<li class="mb-2"><i class="bi bi-check2 text-info"></i> ${tip}</li>`).join('')}
+                            </ul>
+                        </div>
+                    </div>
+
+                    <div class="alert alert-warning mt-3">
+                        <small><i class="bi bi-pencil"></i> <strong>Hướng dẫn:</strong> Bạn có thể chỉnh sửa prompt ở trên để tùy chỉnh cấu trúc kết quả theo ý muốn. Template chỉ là gợi ý ban đầu.</small>
+                    </div>
+                `;
+                    templateHelper.style.display = 'block';
+                } else {
+                    templateHelper.style.display = 'none';
+                }
+
+                // Update output title
+                updateOutputTitle();
+            }
+
+            // Request timing management
+            class RequestTimingManager {
+                constructor() {
+                    this.storageKey = 'ocr_request_timings';
+                    this.maxStoredTimings = 50; // Keep last 50 timings
+                }
+
+                // Get stored timings from localStorage
+                getStoredTimings() {
+                    try {
+                        const stored = localStorage.getItem(this.storageKey);
+                        return stored ? JSON.parse(stored) : [];
+                    } catch (e) {
+                        console.error('Error reading stored timings:', e);
+                        return [];
+                    }
+                }
+
+                // Save timing to localStorage
+                saveRequestTiming(startTime, endTime, fileType = 'image', fileSize = 0) {
+                    const duration = endTime - startTime;
+                    const timing = {
+                        startTime,
+                        endTime,
+                        duration,
+                        fileType,
+                        fileSize,
+                        timestamp: Date.now()
+                    };
+
+                    const timings = this.getStoredTimings();
+                    timings.push(timing);
+
+                    // Keep only the most recent timings
+                    if (timings.length > this.maxStoredTimings) {
+                        timings.splice(0, timings.length - this.maxStoredTimings);
+                    }
+
+                    try {
+                        localStorage.setItem(this.storageKey, JSON.stringify(timings));
+                    } catch (e) {
+                        console.error('Error saving timing:', e);
+                    }
+                }
+
+                // Calculate estimated processing time based on historical data
+                getEstimatedTime(fileType = 'image', fileSize = 0) {
+                    const timings = this.getStoredTimings();
+
+                    if (timings.length === 0) {
+                        return { estimated: 30000, confidence: 'thấp' }; // Default 30 seconds
+                    }
+
+                    // Filter timings by file type if available
+                    const relevantTimings = timings.filter(t => t.fileType === fileType);
+                    const timingsToUse = relevantTimings.length >= 3 ? relevantTimings : timings;
+
+                    // Calculate average duration
+                    const totalDuration = timingsToUse.reduce((sum, t) => sum + t.duration, 0);
+                    const averageDuration = totalDuration / timingsToUse.length;
+
+                    // Calculate confidence based on number of samples
+                    let confidence = 'thấp';
+                    if (timingsToUse.length >= 10) confidence = 'cao';
+                    else if (timingsToUse.length >= 5) confidence = 'trung bình';
+
+                    // Adjust for file size if provided (rough estimation)
+                    let estimatedDuration = averageDuration;
+                    if (fileSize > 0 && timingsToUse.some(t => t.fileSize > 0)) {
+                        const avgFileSize = timingsToUse
+                            .filter(t => t.fileSize > 0)
+                            .reduce((sum, t) => sum + t.fileSize, 0) /
+                            timingsToUse.filter(t => t.fileSize > 0).length;
+
+                        if (avgFileSize > 0) {
+                            const sizeRatio = fileSize / avgFileSize;
+                            estimatedDuration = averageDuration * Math.sqrt(sizeRatio); // Square root for diminishing returns
+                        }
+                    }
+
+                    return {
+                        estimated: Math.max(5000, Math.min(300000, estimatedDuration)), // Between 5s and 5min
+                        confidence,
+                        sampleCount: timingsToUse.length
+                    };
+                }
+
+                // Format duration for display
+                formatDuration(milliseconds) {
+                    const seconds = Math.floor(milliseconds / 1000);
+                    const minutes = Math.floor(seconds / 60);
+
+                    if (minutes > 0) {
+                        return `${minutes}m ${seconds % 60}s`;
+                    }
+                    return `${seconds}s`;
+                }
+            }
+
+            const timingManager = new RequestTimingManager();
+
+            // Progress tracking
+            let progressInterval = null;
+
+            function startProgressTracking(estimatedDuration) {
+                const startTime = Date.now();
+                progressInfo.style.display = 'block';
+
+                progressInterval = setInterval(() => {
+                    const elapsed = Date.now() - startTime;
+                    const progress = Math.min((elapsed / estimatedDuration) * 100, 95); // Cap at 95% until completion
+                    const remaining = Math.max(0, estimatedDuration - elapsed);
+
+                    progressBar.style.width = `${progress}%`;
+                    progressText.textContent = `Thời gian còn lại: ${timingManager.formatDuration(remaining)}`;
+
+                    // If we've exceeded the estimated time, slow down the progress
+                    if (progress >= 95) {
+                        clearInterval(progressInterval);
+                        progressText.textContent = 'Đang hoàn thành...';
+                    }
+                }, 1000);
+            }
+
+            function stopProgressTracking() {
+                if (progressInterval) {
+                    clearInterval(progressInterval);
+                    progressInterval = null;
+                }
+                progressBar.style.width = '100%';
+                progressText.textContent = 'Hoàn thành!';
+
+                setTimeout(() => {
+                    progressInfo.style.display = 'none';
+                    progressBar.style.width = '0%';
+                }, 2000);
+            }
+
+            // Event listeners for drag and drop
+            ['dragover', 'dragenter'].forEach(eventName => {
+                dragArea.addEventListener(eventName, (e) => {
+                    e.preventDefault();
+                    dragArea.classList.add('drag-active');
+                });
+            });
+
+            ['dragleave', 'dragend'].forEach(eventName => {
+                dragArea.addEventListener(eventName, () => {
+                    dragArea.classList.remove('drag-active');
+                });
+            });
+
+            dragArea.addEventListener('drop', (e) => {
                 e.preventDefault();
-                dragArea.classList.add('drag-active');
-            });
-        });
-
-        ['dragleave', 'dragend'].forEach(eventName => {
-            dragArea.addEventListener(eventName, () => {
                 dragArea.classList.remove('drag-active');
+
+                const file = e.dataTransfer.files[0];
+                if (file && (file.type.match('image.*') || file.type === 'application/pdf')) {
+                    handleFile(file);
+                }
             });
-        });
 
-        dragArea.addEventListener('drop', (e) => {
-            e.preventDefault();
-            dragArea.classList.remove('drag-active');
+            dragArea.addEventListener('click', () => {
+                fileInput.click();
+            });
 
-            const file = e.dataTransfer.files[0];
-            if (file && file.type.match('image.*')) {
-                handleFile(file);
-            }
-        });
+            fileInput.addEventListener('change', () => {
+                const file = fileInput.files[0];
+                if (file) {
+                    handleFile(file);
+                }
+            });
 
-        dragArea.addEventListener('click', () => {
-            fileInput.click();
-        });
+            // Handle file selection
+            function handleFile(file) {
+                if (file && (file.type.match('image.*') || file.type === 'application/pdf')) {
+                    if (file.type === 'application/pdf') {
+                        // Handle PDF file
+                        imagePreview.src = 'data:image/svg+xml;base64,' + btoa(`
+                        <svg xmlns="http://www.w3.org/2000/svg" width="200" height="200" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                            <polyline points="14,2 14,8 20,8"></polyline>
+                            <line x1="16" y1="13" x2="8" y2="13"></line>
+                            <line x1="16" y1="17" x2="8" y2="17"></line>
+                            <polyline points="10,9 9,9 8,9"></polyline>
+                            <text x="12" y="15" text-anchor="middle" font-size="3" fill="currentColor">PDF</text>
+                        </svg>
+                    `);
+                        previewContainer.style.display = 'flex';
+                        processBtn.disabled = false;
 
-        fileInput.addEventListener('change', () => {
-            const file = fileInput.files[0];
-            if (file) {
-                handleFile(file);
-            }
-        });
+                        // Store the file for upload
+                        window.selectedFile = file;
+                    } else {
+                        // Handle image file
+                        const reader = new FileReader();
 
-        // Handle file selection
-        function handleFile(file) {
-            if (file && file.type.match('image.*')) {
-                const reader = new FileReader();
+                        reader.onload = (e) => {
+                            imagePreview.src = e.target.result;
+                            previewContainer.style.display = 'flex';
+                            processBtn.disabled = false;
 
-                reader.onload = (e) => {
-                    imagePreview.src = e.target.result;
-                    previewContainer.style.display = 'flex';
-                    processBtn.disabled = false;
+                            // Clear stored file for image uploads
+                            window.selectedFile = null;
+                        };
+
+                        reader.readAsDataURL(file);
+                    }
 
                     // Reset the output areas
-                    markdownOutput.innerHTML = '<div class="text-center text-muted"><p>Click "Process Image" to extract text</p></div>';
+                    markdownOutput.innerHTML = '<div class="text-center text-muted"><p>Click "Process Image/PDF" to extract text</p></div>';
                     sourceCode.textContent = '';
                     originalMarkdownText = '';
                     copyBtn.disabled = true;
 
+                    // Show estimated processing time
+                    const fileType = file.type === 'application/pdf' ? 'pdf' : 'image';
+                    const fileSize = file.size;
+                    const estimation = timingManager.getEstimatedTime(fileType, fileSize);
+
+                    estimatedTimeText.textContent = `Ước tính thời gian xử lý: ${timingManager.formatDuration(estimation.estimated)} (độ tin cậy của ước tính: ${estimation.confidence})`;
+                    estimatedTimeDiv.style.display = 'block';
+
                     // Switch to rendered view
                     viewRenderedBtn.click();
-                };
 
-                reader.readAsDataURL(file);
-            }
-        }
-
-        // Toggle between rendered and source view
-        viewRenderedBtn.addEventListener('click', () => {
-            viewRenderedBtn.classList.add('active');
-            viewSourceBtn.classList.remove('active');
-            markdownOutput.classList.remove('d-none');
-            markdownSource.classList.add('d-none');
-        });
-
-        viewSourceBtn.addEventListener('click', () => {
-            viewSourceBtn.classList.add('active');
-            viewRenderedBtn.classList.remove('active');
-            markdownSource.classList.remove('d-none');
-            markdownOutput.classList.add('d-none');
-        });
-
-        // Function to render markdown
-        function renderMarkdown(text) {
-            // Store original text
-            originalMarkdownText = text;
-
-            // Render markdown to HTML
-            const renderedHtml = md.render(text);
-
-            // Update both views
-            markdownOutput.innerHTML = renderedHtml;
-            sourceCode.textContent = text;
-
-            // Enable copy button
-            copyBtn.disabled = false;
-        }
-
-        // Process the image
-        processBtn.addEventListener('click', async () => {
-            if (!imagePreview.src || imagePreview.src === '#') {
-                alert('Please upload an image first.');
-                return;
-            }
-
-            // Show loading indicator
-            loadingIndicator.style.display = 'block';
-            markdownOutput.innerHTML = '';
-            sourceCode.textContent = '';
-            copyBtn.disabled = true;
-            processBtn.disabled = true;
-
-            // Switch to rendered view
-            viewRenderedBtn.click();
-
-            // Check if streaming is enabled
-            const isStreaming = streamingInput.checked;
-
-            try {
-                const baseUrl = apiUrlInput.value.trim();
-                const apiUrl = `${baseUrl}/api/image-to-text`;
-
-                const requestBody = {
-                    prompt: promptInput.value.trim(),
-                    image: imagePreview.src,
-                    max_tokens: parseInt(maxTokensInput.value),
-                    temperature: parseFloat(temperatureInput.value),
-                    num_beams: parseInt(beamsInput.value),
-                    stream: isStreaming
-                };
-
-                if (isStreaming) {
-                    // Handle streaming response
-                    const response = await fetch(apiUrl, {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json'
-                        },
-                        body: JSON.stringify(requestBody)
-                    });
-
-                    if (!response.ok) {
-                        throw new Error(`Server error: ${response.status}`);
-                    }
-
-                    // Enable copy button for streaming
-                    copyBtn.disabled = false;
-
-                    // Process the streaming response
-                    const reader = response.body.getReader();
-                    const decoder = new TextDecoder();
-                    let buffer = '';
-                    let fullText = '';
-
-                    // Hide loading indicator as we'll show streaming results
-                    loadingIndicator.style.display = 'none';
-
-                    while (true) {
-                        const { done, value } = await reader.read();
-                        if (done) break;
-
-                        // Decode the received chunk
-                        buffer += decoder.decode(value, { stream: true });
-
-                        // Process each complete SSE message
-                        const lines = buffer.split('\n\n');
-                        buffer = lines.pop() || '';
-
-                        for (const line of lines) {
-                            if (!line.trim() || !line.startsWith('data:')) continue;
-
-                            const data = line.substring(5).trim();
-                            if (data === '[DONE]') {
-                                // Streaming completed
-                                break;
-                            }
-
-                            try {
-                                const json = JSON.parse(data);
-                                if (json.text) {
-                                    fullText += json.text;
-                                    // Update the UI with the current text
-                                    renderMarkdown(fullText);
-                                }
-                            } catch (e) {
-                                console.error('Error parsing streaming data:', e);
-                            }
-                        }
-                    }
-
-                    // Final render with complete text
-                    if (fullText) {
-                        renderMarkdown(fullText);
-                    }
-                } else {
-                    // Handle regular (non-streaming) response
-                    const response = await fetch(apiUrl, {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json'
-                        },
-                        body: JSON.stringify(requestBody)
-                    });
-
-                    if (!response.ok) {
-                        throw new Error(`Server error: ${response.status}`);
-                    }
-
-                    const data = await response.json();
-
-                    // Render the markdown result
-                    renderMarkdown(data.text);
-
-                    // Hide loading indicator
-                    loadingIndicator.style.display = 'none';
+                    // Update output title based on selected template
+                    updateOutputTitle();
                 }
-            } catch (error) {
-                console.error('Error processing image:', error);
-                markdownOutput.innerHTML = `<div class="alert alert-danger">Error: ${error.message}</div>`;
-                sourceCode.textContent = `Error: ${error.message}`;
-                loadingIndicator.style.display = 'none';
-            } finally {
-                processBtn.disabled = false;
             }
-        });
 
-        // Copy to clipboard
-        copyBtn.addEventListener('click', () => {
-            // Copy the original markdown text, not the rendered HTML
-            const textToCopy = originalMarkdownText;
+            // Update prompt, helper and output title when template changes
+            templateSelect.addEventListener('change', updateTemplatePromptAndHelper);
 
-            navigator.clipboard.writeText(textToCopy)
-                .then(() => {
-                    const originalText = copyBtn.innerHTML;
-                    copyBtn.innerHTML = '<i class="bi bi-check"></i> Copied';
-                    setTimeout(() => {
-                        copyBtn.innerHTML = originalText;
-                    }, 2000);
-                })
-                .catch(err => {
-                    console.error('Could not copy text: ', err);
-                    alert('Failed to copy to clipboard. Please try again.');
+            // Initialize prompt, helper and output title on page load
+            updateTemplatePromptAndHelper();
+
+            // Toggle between rendered and source view
+            viewRenderedBtn.addEventListener('click', () => {
+                viewRenderedBtn.classList.add('active');
+                viewSourceBtn.classList.remove('active');
+                markdownOutput.classList.remove('d-none');
+                markdownSource.classList.add('d-none');
+            });
+
+            viewSourceBtn.addEventListener('click', () => {
+                viewSourceBtn.classList.add('active');
+                viewRenderedBtn.classList.remove('active');
+                markdownSource.classList.remove('d-none');
+                markdownOutput.classList.add('d-none');
+            });
+
+            // Function to render markdown
+            function renderMarkdown(text) {
+                // Store original text
+                originalMarkdownText = text;
+
+                // Render markdown to HTML
+                const renderedHtml = md.render(text);
+
+                // Update both views
+                markdownOutput.innerHTML = renderedHtml;
+                sourceCode.textContent = text;
+
+                // Enable copy button
+                copyBtn.disabled = false;
+            }
+
+            // Process the image/PDF
+            processBtn.addEventListener('click', async () => {
+                if (!imagePreview.src || imagePreview.src === '#') {
+                    alert('Vui lòng tải lên hình ảnh hoặc PDF trước.');
+                    return;
+                }
+
+                // Start timing
+                const startTime = Date.now();
+                const fileType = window.selectedFile ?
+                    (window.selectedFile.type === 'application/pdf' ? 'pdf' : 'image') : 'image';
+                const fileSize = window.selectedFile ? window.selectedFile.size : 0;
+
+                // Get estimated time and start progress tracking
+                const estimation = timingManager.getEstimatedTime(fileType, fileSize);
+
+                // Show loading indicator
+                loadingIndicator.style.display = 'block';
+                markdownOutput.innerHTML = '';
+                sourceCode.textContent = '';
+                copyBtn.disabled = true;
+                processBtn.disabled = true;
+
+                // Start progress tracking
+                startProgressTracking(estimation.estimated);
+
+                // Switch to rendered view
+                viewRenderedBtn.click();
+
+                // Streaming is disabled
+
+                try {
+                    const baseUrl = apiUrlInput.value.trim();
+
+                    // Check if we have a PDF file to upload
+                    if (window.selectedFile && window.selectedFile.type === 'application/pdf') {
+                        // Use upload endpoint for PDF
+                        const apiUrl = `${baseUrl}/api/upload-image`;
+                        const formData = new FormData();
+                        formData.append('file', window.selectedFile);
+                        formData.append('prompt', getPromptValue().trim());
+                        formData.append('max_tokens', maxTokensInput.value);
+                        formData.append('temperature', temperatureInput.value);
+                        formData.append('num_beams', beamsInput.value);
+                        formData.append('stream', 'false'); // PDF doesn't support streaming yet
+                        if (templateSelect.value) {
+                            formData.append('template', templateSelect.value);
+                        }
+
+                        const response = await fetch(apiUrl, {
+                            method: 'POST',
+                            body: formData
+                        });
+
+                        if (!response.ok) {
+                            throw new Error(`Server error: ${response.status}`);
+                        }
+
+                        const data = await response.json();
+
+                        // Render the markdown result
+                        renderMarkdown(data.text);
+
+                        // Show page count if available
+                        if (data.pages) {
+                            markdownOutput.innerHTML = `<div class="alert alert-info">Đã xử lý ${data.pages} trang PDF</div>` + markdownOutput.innerHTML;
+                        }
+
+                        // Save timing for PDF processing
+                        const endTime = Date.now();
+                        timingManager.saveRequestTiming(startTime, endTime, fileType, fileSize);
+
+                        // Stop progress tracking and hide loading indicator
+                        stopProgressTracking();
+                        loadingIndicator.style.display = 'none';
+                    } else {
+                        // Use image-to-text endpoint for images
+                        const apiUrl = `${baseUrl}/api/image-to-text`;
+                        const requestBody = {
+                            prompt: getPromptValue().trim(),
+                            image: imagePreview.src,
+                            max_tokens: parseInt(maxTokensInput.value),
+                            temperature: parseFloat(temperatureInput.value),
+                            num_beams: parseInt(beamsInput.value),
+                            stream: false,
+                            template: templateSelect.value || null
+                        };
+
+                        // Handle regular (non-streaming) response
+                        const response = await fetch(apiUrl, {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json'
+                            },
+                            body: JSON.stringify(requestBody)
+                        });
+
+                        if (!response.ok) {
+                            throw new Error(`Server error: ${response.status}`);
+                        }
+
+                        const data = await response.json();
+
+                        // Render the markdown result
+                        renderMarkdown(data.text);
+
+                        // Save timing for regular response
+                        const endTime = Date.now();
+                        timingManager.saveRequestTiming(startTime, endTime, fileType, fileSize);
+
+                        // Stop progress tracking and hide loading indicator
+                        stopProgressTracking();
+                        loadingIndicator.style.display = 'none';
+                    }
+                } catch (error) {
+                    console.error('Error processing image:', error);
+                    markdownOutput.innerHTML = `<div class="alert alert-danger">Lỗi: ${error.message}</div>`;
+                    sourceCode.textContent = `Lỗi: ${error.message}`;
+
+                    // Stop progress tracking on error
+                    stopProgressTracking();
+                    loadingIndicator.style.display = 'none';
+                } finally {
+                    processBtn.disabled = false;
+                }
+            });
+
+            // Copy to clipboard
+            copyBtn.addEventListener('click', () => {
+                // Copy the original markdown text, not the rendered HTML
+                const textToCopy = originalMarkdownText;
+
+                navigator.clipboard.writeText(textToCopy)
+                    .then(() => {
+                        const originalText = copyBtn.innerHTML;
+                        copyBtn.innerHTML = '<i class="bi bi-check"></i> Đã Sao Chép';
+                        setTimeout(() => {
+                            copyBtn.innerHTML = originalText;
+                        }, 2000);
+                    })
+                    .catch(err => {
+                        console.error('Could not copy text: ', err);
+                        alert('Không thể sao chép vào clipboard. Vui lòng thử lại.');
+                    });
+            });
+
+            // Initialize Monaco Editor after DOM is ready
+            require.config({ paths: { vs: 'https://cdn.jsdelivr.net/npm/monaco-editor@0.44.0/min/vs' } });
+            require(['vs/editor/editor.main'], function () {
+                promptEditor = monaco.editor.create(document.getElementById('promptEditor'), {
+                    value: 'Trích xuất thông tin chính trong ảnh và trả về dạng markdown.',
+                    language: 'markdown',
+                    theme: 'vs',
+                    automaticLayout: true,
+                    wordWrap: 'on',
+                    minimap: { enabled: false },
+                    scrollBeyondLastLine: false,
+                    fontSize: 14,
+                    lineNumbers: 'on',
+                    folding: true,
+                    renderWhitespace: 'selection',
+                    contextmenu: true,
+                    selectOnLineNumbers: true,
+                    roundedSelection: false,
+                    readOnly: false,
+                    cursorStyle: 'line',
+                    automaticLayout: true,
+                    glyphMargin: false,
+                    lineDecorationsWidth: 0,
+                    lineNumbersMinChars: 3,
+                    overviewRulerLanes: 0,
+                    hideCursorInOverviewRuler: true,
+                    scrollbar: {
+                        vertical: 'auto',
+                        horizontal: 'auto',
+                        verticalScrollbarSize: 10,
+                        horizontalScrollbarSize: 10
+                    }
                 });
-        });
+
+                // Initialize template prompt and helper after editor is ready
+                updateTemplatePromptAndHelper();
+            });
+        }); // End of DOMContentLoaded
     </script>
 </body>
 

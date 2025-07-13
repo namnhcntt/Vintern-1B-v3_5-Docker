@@ -3,7 +3,8 @@
 # Script to build the Docker image for Vintern-1B Image-to-Text Demo
 
 # Set image name and tag
-IMAGE_NAME="t2nh/vintern-image-to-text"
+IMAGE_NAME="namnhcntt/vintern-image-to-text"
+VERSION="1.1.0"
 TAG="latest"
 
 # Check if we're in the correct directory
@@ -86,12 +87,14 @@ docker build --platform=$PLATFORM -f $DOCKERFILE -t $IMAGE_NAME:$TAG .
 
 # Check if build was successful
 if [ $? -eq 0 ]; then
-    # Tag as latest as well
+    # Tag with version and latest
+    docker tag $IMAGE_NAME:$TAG $IMAGE_NAME:$VERSION
     docker tag $IMAGE_NAME:$TAG $IMAGE_NAME:latest
 
     echo "Docker image built successfully!"
     echo "Created images:"
     echo "  - $IMAGE_NAME:$TAG"
+    echo "  - $IMAGE_NAME:$VERSION"
     echo "  - $IMAGE_NAME:latest"
     echo ""
     echo "To run the container with model cache volume mapping, use:"

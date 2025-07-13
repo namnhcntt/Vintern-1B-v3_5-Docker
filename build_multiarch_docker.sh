@@ -3,7 +3,8 @@
 # Script to build multi-architecture Docker images for Vintern-1B Image-to-Text Demo
 
 # Set image name and tag
-IMAGE_NAME="vintern-image-to-text"
+IMAGE_NAME="namnhcntt/vintern-image-to-text"
+VERSION="1.1.0"
 TAG="latest"
 
 # Check if we're in the correct directory
@@ -144,9 +145,9 @@ if [ "$BUILD_ARM64" = true ]; then
 
     # Build the ARM64 image
     if [ "$PUSH" = true ]; then
-        docker buildx build --platform linux/arm64 -f Dockerfile.arm64 -t ${IMAGE_NAME}:arm64 --push .
+        docker buildx build --platform linux/arm64 -f Dockerfile.arm64 -t ${IMAGE_NAME}:arm64 -t ${IMAGE_NAME}:${VERSION}-arm64 --push .
     else
-        docker buildx build --platform linux/arm64 -f Dockerfile.arm64 -t ${IMAGE_NAME}:arm64 --load .
+        docker buildx build --platform linux/arm64 -f Dockerfile.arm64 -t ${IMAGE_NAME}:arm64 -t ${IMAGE_NAME}:${VERSION}-arm64 --load .
     fi
 
     # Check if build was successful
@@ -164,9 +165,9 @@ if [ "$BUILD_AMD64" = true ]; then
 
     # Build the AMD64 image
     if [ "$PUSH" = true ]; then
-        docker buildx build --platform linux/amd64 -f Dockerfile.amd64 -t ${IMAGE_NAME}:amd64 --push .
+        docker buildx build --platform linux/amd64 -f Dockerfile.amd64 -t ${IMAGE_NAME}:amd64 -t ${IMAGE_NAME}:${VERSION}-amd64 --push .
     else
-        docker buildx build --platform linux/amd64 -f Dockerfile.amd64 -t ${IMAGE_NAME}:amd64 --load .
+        docker buildx build --platform linux/amd64 -f Dockerfile.amd64 -t ${IMAGE_NAME}:amd64 -t ${IMAGE_NAME}:${VERSION}-amd64 --load .
     fi
 
     # Check if build was successful
@@ -184,9 +185,9 @@ if [ "$BUILD_CUDA" = true ]; then
 
     # Build the CUDA image
     if [ "$PUSH" = true ]; then
-        docker buildx build --platform linux/amd64 -f Dockerfile.cuda -t ${IMAGE_NAME}:cuda --push .
+        docker buildx build --platform linux/amd64 -f Dockerfile.cuda -t ${IMAGE_NAME}:cuda -t ${IMAGE_NAME}:${VERSION}-cuda --push .
     else
-        docker buildx build --platform linux/amd64 -f Dockerfile.cuda -t ${IMAGE_NAME}:cuda --load .
+        docker buildx build --platform linux/amd64 -f Dockerfile.cuda -t ${IMAGE_NAME}:cuda -t ${IMAGE_NAME}:${VERSION}-cuda --load .
     fi
 
     # Check if build was successful
@@ -202,12 +203,18 @@ fi
 if [ "$PUSH" = true ] && { [ "$BUILD_ARM64" = true ] && [ "$BUILD_AMD64" = true ]; } || [ "$BUILD_ALL" = true ]; then
     echo "Creating multi-architecture manifest..."
 
-    # Create and push the manifest
+    # Create and push the manifest for latest
     docker buildx imagetools create -t ${IMAGE_NAME}:latest \
         ${IMAGE_NAME}:arm64 \
         ${IMAGE_NAME}:amd64
 
+    # Create and push the manifest for version
+    docker buildx imagetools create -t ${IMAGE_NAME}:${VERSION} \
+        ${IMAGE_NAME}:${VERSION}-arm64 \
+        ${IMAGE_NAME}:${VERSION}-amd64
+
     echo "Multi-architecture manifest created: ${IMAGE_NAME}:latest"
+    echo "Multi-architecture manifest created: ${IMAGE_NAME}:${VERSION}"
 fi
 
 echo ""
@@ -220,9 +227,19 @@ echo "Or use the run_docker.sh script (recommended):"
 echo "./run_docker.sh"
 echo ""
 echo "Available tags:"
-if [ "$BUILD_ARM64" = true ]; then echo "  - ${IMAGE_NAME}:arm64 (for Apple Silicon and other ARM64 devices)"; fi
-if [ "$BUILD_AMD64" = true ]; then echo "  - ${IMAGE_NAME}:amd64 (for Intel/AMD CPUs)"; fi
-if [ "$BUILD_CUDA" = true ]; then echo "  - ${IMAGE_NAME}:cuda (for NVIDIA GPUs)"; fi
+if [ "$BUILD_ARM64" = true ]; then
+    echo "  - ${IMAGE_NAME}:arm64 (for Apple Silicon and other ARM64 devices)"
+    echo "  - ${IMAGE_NAME}:${VERSION}-arm64 (versioned ARM64 image)"
+fi
+if [ "$BUILD_AMD64" = true ]; then
+    echo "  - ${IMAGE_NAME}:amd64 (for Intel/AMD CPUs)"
+    echo "  - ${IMAGE_NAME}:${VERSION}-amd64 (versioned AMD64 image)"
+fi
+if [ "$BUILD_CUDA" = true ]; then
+    echo "  - ${IMAGE_NAME}:cuda (for NVIDIA GPUs)"
+    echo "  - ${IMAGE_NAME}:${VERSION}-cuda (versioned CUDA image)"
+fi
 if [ "$PUSH" = true ] && { [ "$BUILD_ARM64" = true ] && [ "$BUILD_AMD64" = true ]; } || [ "$BUILD_ALL" = true ]; then
     echo "  - ${IMAGE_NAME}:latest (multi-architecture image)"
+    echo "  - ${IMAGE_NAME}:${VERSION} (versioned multi-architecture image)"
 fi

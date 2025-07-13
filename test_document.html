@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Test Document for OCR</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 40px;
+            line-height: 1.6;
+        }
+        .header {
+            text-align: center;
+            border-bottom: 2px solid #333;
+            padding-bottom: 20px;
+            margin-bottom: 30px;
+        }
+        .section {
+            margin-bottom: 25px;
+        }
+        .table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 20px 0;
+        }
+        .table th, .table td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+        }
+        .table th {
+            background-color: #f2f2f2;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>HÓA ĐỚN BÁN HÀNG</h1>
+        <h2>SALES INVOICE</h2>
+        <p><strong>Số hóa đơn:</strong> HD-2024-001</p>
+        <p><strong>Ngày:</strong> 15/01/2024</p>
+    </div>
+
+    <div class="section">
+        <h3>Thông tin người bán / Seller Information</h3>
+        <p><strong>Công ty:</strong> Công ty TNHH ABC Technology</p>
+        <p><strong>Địa chỉ:</strong> 123 Đường Nguyễn Văn Cừ, Quận 1, TP.HCM</p>
+        <p><strong>Mã số thuế:</strong> 0123456789</p>
+        <p><strong>Điện thoại:</strong> (028) 1234-5678</p>
+    </div>
+
+    <div class="section">
+        <h3>Thông tin người mua / Buyer Information</h3>
+        <p><strong>Khách hàng:</strong> Công ty XYZ Solutions</p>
+        <p><strong>Địa chỉ:</strong> 456 Đường Lê Lợi, Quận 3, TP.HCM</p>
+        <p><strong>Mã số thuế:</strong> 9876543210</p>
+    </div>
+
+    <div class="section">
+        <h3>Chi tiết hàng hóa / Item Details</h3>
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>STT</th>
+                    <th>Tên hàng hóa</th>
+                    <th>Đơn vị</th>
+                    <th>Số lượng</th>
+                    <th>Đơn giá</th>
+                    <th>Thành tiền</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>1</td>
+                    <td>Laptop Dell Inspiron 15</td>
+                    <td>Chiếc</td>
+                    <td>2</td>
+                    <td>15,000,000</td>
+                    <td>30,000,000</td>
+                </tr>
+                <tr>
+                    <td>2</td>
+                    <td>Chuột không dây Logitech</td>
+                    <td>Chiếc</td>
+                    <td>5</td>
+                    <td>500,000</td>
+                    <td>2,500,000</td>
+                </tr>
+                <tr>
+                    <td>3</td>
+                    <td>Bàn phím cơ Gaming</td>
+                    <td>Chiếc</td>
+                    <td>3</td>
+                    <td>1,200,000</td>
+                    <td>3,600,000</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <div class="section">
+        <h3>Tổng kết / Summary</h3>
+        <table class="table" style="width: 50%; margin-left: auto;">
+            <tr>
+                <td><strong>Tổng tiền hàng:</strong></td>
+                <td style="text-align: right;">36,100,000 VNĐ</td>
+            </tr>
+            <tr>
+                <td><strong>Thuế VAT (10%):</strong></td>
+                <td style="text-align: right;">3,610,000 VNĐ</td>
+            </tr>
+            <tr style="background-color: #f2f2f2;">
+                <td><strong>Tổng cộng:</strong></td>
+                <td style="text-align: right;"><strong>39,710,000 VNĐ</strong></td>
+            </tr>
+        </table>
+    </div>
+
+    <div class="section">
+        <p><strong>Ghi chú:</strong> Thanh toán trong vòng 30 ngày kể từ ngày xuất hóa đơn.</p>
+        <p><strong>Phương thức thanh toán:</strong> Chuyển khoản ngân hàng</p>
+    </div>
+
+    <div style="margin-top: 50px; display: flex; justify-content: space-between;">
+        <div style="text-align: center;">
+            <p><strong>Người mua hàng</strong></p>
+            <p>(Ký, ghi rõ họ tên)</p>
+            <br><br><br>
+            <p>_________________</p>
+        </div>
+        <div style="text-align: center;">
+            <p><strong>Người bán hàng</strong></p>
+            <p>(Ký, ghi rõ họ tên)</p>
+            <br><br><br>
+            <p>_________________</p>
+        </div>
+    </div>
+</body>
+</html>
