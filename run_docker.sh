@@ -3,7 +3,7 @@
 # Script to run the Docker container for Vintern-1B Image-to-Text Demo
 
 # Set image name and container name
-IMAGE_NAME="namnhcntt/vintern-image-to-text"
+IMAGE_NAME="vietprogrammer/vintern-image-to-text"
 CONTAINER_NAME="vintern-demo"
 PORT=8000
 

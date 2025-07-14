@@ -3,7 +3,7 @@
 # Script to build multi-architecture Docker images for Vintern-1B Image-to-Text Demo
 
 # Set image name and tag
-IMAGE_NAME="namnhcntt/vintern-image-to-text"
+IMAGE_NAME="vietprogrammer/vintern-image-to-text"
 VERSION="1.1.0"
 TAG="latest"
 
