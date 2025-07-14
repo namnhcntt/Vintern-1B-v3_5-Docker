@@ -1,8 +1,20 @@
 # Vintern-1B Image-to-Text Demo
 
+[![Version](https://img.shields.io/badge/version-1.1.0-blue.svg)](CHANGELOG.md)
+[![Docker](https://img.shields.io/badge/docker-namnhcntt%2Fvintern--image--to--text-blue.svg)](https://hub.docker.com/r/namnhcntt/vintern-image-to-text)
+
 Đây là bản demo của mô hình Vintern-1B-v3.5, có khả năng trích xuất văn bản từ hình ảnh và chuyển đổi sang định dạng markdown. Mô hình này đặc biệt tốt trong việc hiểu văn bản tiếng Việt, OCR và hiểu tài liệu.
 
 Mô hình đang sử dụng trên huggingface: https://huggingface.co/5CD-AI/Vintern-1B-v3_5
+
+## Phiên bản mới nhất
+
+**Version 1.1.0** (2025-01-14)
+- Thống nhất tên Docker image thành `namnhcntt/vintern-image-to-text`
+- Thêm hỗ trợ tag phiên bản cho Docker images
+- Cải thiện quy trình build và deployment
+
+Xem [CHANGELOG.md](CHANGELOG.md) để biết chi tiết về tất cả các thay đổi.
 
 ## Tính năng
 
@@ -76,6 +88,23 @@ Script này sẽ:
 - Docker đã được cài đặt trên máy tính của bạn
 - Khoảng 2GB dung lượng trống cho Docker image
 
+### Docker Hub
+
+Image đã được build sẵn và có sẵn trên Docker Hub tại: `namnhcntt/vintern-image-to-text`
+
+Các tag có sẵn:
+- `latest`: Phiên bản mới nhất
+- `1.1.0`: Phiên bản 1.1.0
+- `1.1.0-amd64`: Phiên bản 1.1.0 cho kiến trúc AMD64
+- `1.1.0-arm64`: Phiên bản 1.1.0 cho kiến trúc ARM64
+- `1.1.0-cuda`: Phiên bản 1.1.0 với hỗ trợ NVIDIA CUDA
+
+Bạn có thể pull image trực tiếp từ Docker Hub:
+
+```bash
+docker pull namnhcntt/vintern-image-to-text:latest
+```
+
 ### Đóng gói thành Docker image
 
 #### Sử dụng script tự động
@@ -90,14 +119,14 @@ chmod +x build_docker.sh
 Script này sẽ:
 1. Kiểm tra các file cần thiết
 2. Tự động phát hiện phần cứng của bạn và sử dụng Dockerfile phù hợp
-3. Đóng gói ứng dụng thành Docker image với tên `vintern-image-to-text:latest`
+3. Đóng gói ứng dụng thành Docker image với tên `namnhcntt/vintern-image-to-text:latest`
 
 #### Đóng gói thủ công
 
 Nếu bạn muốn đóng gói thủ công, bạn có thể sử dụng lệnh sau:
 
 ```bash
-docker build -t vintern-image-to-text:latest .
+docker build -t namnhcntt/vintern-image-to-text:latest .
 ```
 
 ### Đóng gói cho nhiều kiến trúc
@@ -145,7 +174,7 @@ Script này sẽ:
 Nếu bạn muốn chạy container thủ công, bạn có thể sử dụng lệnh sau:
 
 ```bash
-docker run --name vintern-demo -p 8000:8000 -d vintern-image-to-text:latest
+docker run --name vintern-demo -p 8000:8000 -d namnhcntt/vintern-image-to-text:latest
 ```
 
 Sau đó, bạn có thể truy cập ứng dụng tại:
@@ -157,7 +186,7 @@ Sau đó, bạn có thể truy cập ứng dụng tại:
 Để tránh việc phải tải lại các file mô hình mỗi khi khởi động container, bạn có thể sử dụng volume mapping:
 
 ```bash
-docker run -v $HOME/.cache/huggingface:/root/.cache/huggingface -p 8000:8000 vintern-image-to-text:latest
+docker run -v $HOME/.cache/huggingface:/root/.cache/huggingface -p 8000:8000 namnhcntt/vintern-image-to-text:latest
 ```
 
 Script `run_docker.sh` đã được cập nhật để tự động tạo volume mapping. Khi bạn chạy script này, nó sẽ:
@@ -199,7 +228,7 @@ export VINTERN_REPETITION_PENALTY=2.5
 Khi chạy Docker container, bạn có thể truyền biến môi trường:
 
 ```bash
-docker run -e VINTERN_STREAM=true -p 8000:8000 vintern-image-to-text:latest
+docker run -e VINTERN_STREAM=true -p 8000:8000 namnhcntt/vintern-image-to-text:latest
 ```
 
 Hoặc sử dụng script `run_docker.sh` với biến môi trường:
@@ -321,7 +350,7 @@ docker logs vintern-demo
 Nếu cổng 8000 đã được sử dụng, bạn có thể chỉ định một cổng khác:
 
 ```bash
-docker run --name vintern-demo -p 8080:8000 -d vintern-image-to-text:latest
+docker run --name vintern-demo -p 8080:8000 -d namnhcntt/vintern-image-to-text:latest
 ```
 
 Sau đó, bạn có thể truy cập ứng dụng tại http://localhost:8080
