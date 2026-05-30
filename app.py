@@ -34,9 +34,12 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Mount static files directory
-static_dir = pathlib.Path(__file__).parent / "static"
-app.mount("/static", StaticFiles(directory=str(static_dir)), name="static")
+PROJECT_ROOT = pathlib.Path(__file__).parent
+FRONTEND_DIR = PROJECT_ROOT / "frontend"
+static_dir = FRONTEND_DIR / "static"
+
+if static_dir.exists():
+    app.mount("/static", StaticFiles(directory=str(static_dir)), name="static")
 
 # Environment variables and configuration
 def get_env_bool(name, default=False):
@@ -427,14 +430,7 @@ async def startup_event():
 async def root():
     """Serve the index.html file"""
     try:
-        # First try to serve from the root directory
-        root_index_path = pathlib.Path(__file__).parent / "index.html"
-        if root_index_path.exists():
-            with open(root_index_path, "r", encoding="utf-8") as f:
-                return f.read()
-
-        # Fallback to static directory for Docker compatibility
-        index_path = static_dir / "index.html"
+        index_path = FRONTEND_DIR / "index.html"
         if index_path.exists():
             with open(index_path, "r", encoding="utf-8") as f:
                 return f.read()

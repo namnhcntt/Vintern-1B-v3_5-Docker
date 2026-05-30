@@ -7,13 +7,16 @@ from reportlab.lib.units import cm
 from reportlab.pdfbase import pdfmetrics
 from reportlab.pdfbase.ttfonts import TTFont
 import os
+from pathlib import Path
 
 def create_test_pdf():
     """Create a test PDF with Vietnamese text for OCR testing"""
     
     # Create PDF
-    pdf_filename = "test_invoice.pdf"
-    c = canvas.Canvas(pdf_filename, pagesize=A4)
+    fixtures_dir = Path(__file__).parent / "fixtures"
+    fixtures_dir.mkdir(exist_ok=True)
+    pdf_filename = fixtures_dir / "test_invoice.pdf"
+    c = canvas.Canvas(str(pdf_filename), pagesize=A4)
     width, height = A4
     
     # Set up fonts (using default fonts that support Unicode)
@@ -115,7 +118,7 @@ def create_test_pdf():
     # Save PDF
     c.save()
     print(f"Created test PDF: {pdf_filename}")
-    return pdf_filename
+    return str(pdf_filename)
 
 if __name__ == "__main__":
     create_test_pdf()

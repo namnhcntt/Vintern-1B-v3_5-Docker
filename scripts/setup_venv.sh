@@ -1,4 +1,7 @@
 #!/bin/bash
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+PROJECT_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
+cd "$PROJECT_ROOT" || exit 1
 
 echo "Setting up Virtual Environment for Vintern-1B Project"
 echo "===================================================="
@@ -6,8 +9,7 @@ echo ""
 
 # Check if we're in the correct directory
 if [ ! -f "app.py" ] || [ ! -f "requirements.txt" ]; then
-    echo "Error: This script must be run from the project directory."
-    echo "Please cd to the project directory first."
+    echo "Error: app.py or requirements.txt not found in project root."
     exit 1
 fi
 
@@ -89,7 +91,7 @@ if [ $? -eq 0 ]; then
     echo "Setup completed successfully!"
     echo "Virtual environment is ready at '$VENV_DIR'."
     echo ""
-    echo "To run the demo, use: ./run_demo.sh"
+    echo "To run the demo, use: ./scripts/run_demo.sh"
     echo "The script will automatically use the virtual environment."
 else
     echo ""

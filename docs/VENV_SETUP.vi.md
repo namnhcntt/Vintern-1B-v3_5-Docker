@@ -10,15 +10,15 @@ Project này đã được cấu hình để sử dụng virtual environment (ve
 #### Trên Windows:
 ```bash
 # Chạy script thiết lập tự động
-./setup_venv.sh
+./scripts/setup_venv.sh
 # hoặc
-setup_venv.bat
+scripts\setup_venv.bat
 ```
 
 #### Trên Linux/macOS:
 ```bash
 # Chạy script thiết lập tự động
-./setup_venv.sh
+./scripts/setup_venv.sh
 ```
 
 ### 2. Thủ Công
@@ -42,8 +42,8 @@ pip install -r requirements.txt
 
 ### Chạy Demo
 ```bash
-# Script run_demo.sh đã được cập nhật để tự động sử dụng virtual environment
-./run_demo.sh
+# Script scripts/run_demo.sh đã được cập nhật để tự động sử dụng virtual environment
+./scripts/run_demo.sh
 ```
 
 ### Kích Hoạt Virtual Environment Thủ Công
@@ -69,16 +69,17 @@ project/
 │   └── ...
 ├── app.py
 ├── requirements.txt
-├── run_demo.sh            # Script đã được cập nhật để sử dụng venv
-├── setup_venv.sh          # Script thiết lập venv cho Unix/Git Bash
-├── setup_venv.bat         # Script thiết lập venv cho Windows
+├── scripts/
+│   ├── run_demo.sh        # Script đã được cập nhật để sử dụng venv
+│   ├── setup_venv.sh      # Script thiết lập venv cho Unix/Git Bash
+│   └── setup_venv.bat     # Script thiết lập venv cho Windows
 └── ...
 ```
 
 ## Ghi Chú
 
 1. **Virtual Environment**: Tất cả dependencies sẽ được cài đặt trong thư mục `venv/` thay vì system-wide
-2. **Script Update**: `run_demo.sh` đã được cập nhật để:
+2. **Script Update**: `scripts/run_demo.sh` đã được cập nhật để:
    - Tự động tạo virtual environment nếu chưa tồn tại
    - Kích hoạt virtual environment trước khi chạy
    - Sử dụng Python và pip từ virtual environment
@@ -103,7 +104,7 @@ python -m pip install --upgrade pip
 ### Lỗi permissions trên Linux/macOS:
 ```bash
 # Cấp quyền execute cho scripts
-chmod +x setup_venv.sh run_demo.sh
+chmod +x scripts/setup_venv.sh scripts/run_demo.sh
 ```
 
 ## Requirements

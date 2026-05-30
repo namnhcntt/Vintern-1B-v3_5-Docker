@@ -1,221 +1,131 @@
 # Vintern-1B Image-to-Text Demo
 
-[![Version](https://img.shields.io/badge/version-1.1.0-blue.svg)](CHANGELOG.md)
+[![Version](https://img.shields.io/badge/version-1.1.0-blue.svg)](docs/CHANGELOG.md)
 [![Docker](https://img.shields.io/badge/docker-namnhcntt%2Fvintern--image--to--text-blue.svg)](https://hub.docker.com/r/namnhcntt/vintern-image-to-text)
 
-Đây là bản demo của mô hình Vintern-1B-v3.5, có khả năng trích xuất văn bản từ hình ảnh và chuyển đổi sang định dạng markdown. Mô hình này đặc biệt tốt trong việc hiểu văn bản tiếng Việt, OCR và hiểu tài liệu.
+FastAPI and Docker demo for [5CD-AI/Vintern-1B-v3_5](https://huggingface.co/5CD-AI/Vintern-1B-v3_5), a Vietnamese-focused vision-language model for OCR, document understanding, and image-to-text extraction.
 
-Mô hình đang sử dụng trên huggingface: https://huggingface.co/5CD-AI/Vintern-1B-v3_5
+Vietnamese documentation is available in [README.vi.md](README.vi.md).
 
-## Phiên bản mới nhất
+## Features
 
-**Version 1.1.0** (2025-01-14)
-- Thống nhất tên Docker image thành `namnhcntt/vintern-image-to-text`
-- Thêm hỗ trợ tag phiên bản cho Docker images
-- Cải thiện quy trình build và deployment
+- Web UI for image/PDF upload and OCR-style extraction
+- Prompt customization and structured output templates
+- JSON API and multipart upload API
+- Optional streaming responses
+- Automatic hardware detection for CPU, Apple Silicon MPS, and NVIDIA CUDA
+- Docker build variants for AMD64, ARM64, and CUDA
 
-Xem [CHANGELOG.md](CHANGELOG.md) để biết chi tiết về tất cả các thay đổi.
+## Project Layout
 
-## Tính năng
+```text
+.
+├── app.py                  # FastAPI application
+├── frontend/               # Web UI
+├── docker/                 # Dockerfile variants
+├── scripts/                # Setup, run, and Docker helper scripts
+├── tests/                  # Manual test scripts and fixtures
+├── docs/                   # Changelog and supplemental docs
+└── tools/mcp/              # Optional Playwright MCP package files
+```
 
-- Giao diện web đơn giản để chuyển đổi hình ảnh thành văn bản
-- Tải lên file bằng kéo thả
-- Tùy chỉnh prompt
-- Cấu hình thiết lập API
-- Chức năng sao chép vào clipboard
-- Hỗ trợ streaming kết quả theo thời gian thực
-
-## Yêu cầu
+## Requirements
 
 - Python 3.8+
-- PyTorch
-- FastAPI
-- Transformers
-- Các phụ thuộc khác được liệt kê trong `requirements.txt`
+- pip and venv
+- Docker, if you want to use containers
+- Enough disk space for Python dependencies and Hugging Face model cache
 
-## Cài đặt và chạy
+## Run Locally
 
-### Cài đặt thông thường
-
-1. Cài đặt các phụ thuộc cần thiết:
+Install dependencies and start the API:
 
 ```bash
 pip install -r requirements.txt
-```
-
-2. Khởi động máy chủ API:
-
-```bash
 python app.py
 ```
 
-Máy chủ sẽ chạy tại http://localhost:8000.
+The app will be available at:
 
-### Sử dụng script tự động
+- Web UI: http://localhost:8000
+- API info: http://localhost:8000/api
 
-Bạn có thể sử dụng script `run_demo.sh` để tự động cài đặt và chạy demo:
-
-```bash
-chmod +x run_demo.sh
-./run_demo.sh
-```
-
-Script này sẽ:
-1. Kiểm tra và cài đặt các phụ thuộc cần thiết
-2. Tìm cổng trống nếu cổng 8000 đã được sử dụng
-3. Khởi động máy chủ API
-4. Mở trình duyệt web với giao diện người dùng
-
-### Tối ưu hóa cho Apple Silicon
-
-Nếu bạn đang sử dụng Mac với chip Apple Silicon (M1/M2/M3), bạn có thể sử dụng script `fix_transformers.sh` để tối ưu hóa hiệu suất:
+You can also use the helper script, which creates and uses a local virtual environment:
 
 ```bash
-chmod +x fix_transformers.sh
-./fix_transformers.sh
+chmod +x scripts/run_demo.sh
+./scripts/run_demo.sh
 ```
 
-Script này sẽ:
-- Phát hiện nếu bạn đang sử dụng Apple Silicon
-- Cài đặt PyTorch và TorchVision được tối ưu hóa cho Apple Silicon
-- Cài đặt transformers phiên bản 4.38.0 trở lên
-- Xác minh MPS (Metal Performance Shaders) có sẵn trên hệ thống của bạn
-
-## Sử dụng Docker
-
-### Yêu cầu
-
-- Docker đã được cài đặt trên máy tính của bạn
-- Khoảng 2GB dung lượng trống cho Docker image
-
-### Docker Hub
-
-Image đã được build sẵn và có sẵn trên Docker Hub tại: `namnhcntt/vintern-image-to-text`
-
-Các tag có sẵn:
-- `latest`: Phiên bản mới nhất
-- `1.1.0`: Phiên bản 1.1.0
-- `1.1.0-amd64`: Phiên bản 1.1.0 cho kiến trúc AMD64
-- `1.1.0-arm64`: Phiên bản 1.1.0 cho kiến trúc ARM64
-- `1.1.0-cuda`: Phiên bản 1.1.0 với hỗ trợ NVIDIA CUDA
-
-Bạn có thể pull image trực tiếp từ Docker Hub:
+For explicit virtual environment setup:
 
 ```bash
-docker pull namnhcntt/vintern-image-to-text:latest
+chmod +x scripts/setup_venv.sh
+./scripts/setup_venv.sh
 ```
 
-### Đóng gói thành Docker image
-
-#### Sử dụng script tự động
-
-Cách đơn giản nhất để đóng gói ứng dụng là sử dụng script `build_docker.sh`:
+On Apple Silicon, this helper installs compatible dependencies and enables MPS fallback where needed:
 
 ```bash
-chmod +x build_docker.sh
-./build_docker.sh
+chmod +x scripts/fix_transformers.sh
+./scripts/fix_transformers.sh
 ```
 
-Script này sẽ:
-1. Kiểm tra các file cần thiết
-2. Tự động phát hiện phần cứng của bạn và sử dụng Dockerfile phù hợp
-3. Đóng gói ứng dụng thành Docker image với tên `namnhcntt/vintern-image-to-text:latest`
+## Docker
 
-#### Đóng gói thủ công
-
-Nếu bạn muốn đóng gói thủ công, bạn có thể sử dụng lệnh sau:
+Build the best image for the current machine:
 
 ```bash
-docker build -t namnhcntt/vintern-image-to-text:latest .
+chmod +x scripts/build_docker.sh
+./scripts/build_docker.sh
 ```
 
-### Đóng gói cho nhiều kiến trúc
-
-Để đóng gói ứng dụng cho nhiều kiến trúc (ARM64 và AMD64), bạn có thể sử dụng script `build_multiarch_docker.sh`:
+Run the container:
 
 ```bash
-chmod +x build_multiarch_docker.sh
-./build_multiarch_docker.sh --all
+chmod +x scripts/run_docker.sh
+./scripts/run_docker.sh
 ```
 
-Script này sẽ:
-1. Tạo Docker image cho ARM64 (Apple Silicon)
-2. Tạo Docker image cho AMD64 (Intel/AMD)
-3. Tạo Docker image cho NVIDIA CUDA
-4. Tạo manifest đa kiến trúc (nếu sử dụng tùy chọn `--push`)
-
-Các tùy chọn có sẵn:
-- `--arm64`: Build cho kiến trúc ARM64
-- `--amd64`: Build cho kiến trúc AMD64
-- `--cuda`: Build cho NVIDIA CUDA
-- `--all`: Build cho tất cả các kiến trúc
-- `--push`: Đẩy image lên Docker Hub (yêu cầu đăng nhập)
-
-### Chạy Docker container
-
-#### Sử dụng script tự động
-
-Cách đơn giản nhất để chạy container là sử dụng script `run_docker.sh`:
+Manual build using the default Dockerfile:
 
 ```bash
-chmod +x run_docker.sh
-./run_docker.sh
+docker build -f docker/Dockerfile -t namnhcntt/vintern-image-to-text:latest .
 ```
 
-Script này sẽ:
-1. Kiểm tra xem Docker image đã tồn tại chưa
-2. Dừng và xóa container cũ nếu có
-3. Kiểm tra xem cổng 8000 đã được sử dụng chưa
-4. Tự động ánh xạ thư mục cache Hugging Face
-5. Chạy container mới với cấu hình phù hợp với phần cứng của bạn
-
-#### Chạy thủ công
-
-Nếu bạn muốn chạy container thủ công, bạn có thể sử dụng lệnh sau:
+Manual run:
 
 ```bash
 docker run --name vintern-demo -p 8000:8000 -d namnhcntt/vintern-image-to-text:latest
 ```
 
-Sau đó, bạn có thể truy cập ứng dụng tại:
-- Web UI: http://localhost:8000
-- API: http://localhost:8000/api
-
-### Sử dụng Volume Mapping
-
-Để tránh việc phải tải lại các file mô hình mỗi khi khởi động container, bạn có thể sử dụng volume mapping:
+To reuse the Hugging Face cache between container runs:
 
 ```bash
-docker run -v $HOME/.cache/huggingface:/root/.cache/huggingface -p 8000:8000 namnhcntt/vintern-image-to-text:latest
+docker run \
+  -v "$HOME/.cache/huggingface:/root/.cache/huggingface" \
+  -p 8000:8000 \
+  namnhcntt/vintern-image-to-text:latest
 ```
 
-Script `run_docker.sh` đã được cập nhật để tự động tạo volume mapping. Khi bạn chạy script này, nó sẽ:
-
-1. Tự động phát hiện thư mục cache Hugging Face trên máy host
-2. Tạo thư mục này nếu nó chưa tồn tại
-3. Ánh xạ thư mục này vào thư mục `/root/.cache/huggingface` trong container
-
-Bạn có thể chỉ định một thư mục cache khác bằng cách đặt biến môi trường `MODEL_CACHE_DIR`:
+Build specific architecture images:
 
 ```bash
-MODEL_CACHE_DIR=/path/to/custom/cache ./run_docker.sh
+./scripts/build_multiarch_docker.sh --arm64
+./scripts/build_multiarch_docker.sh --amd64
+./scripts/build_multiarch_docker.sh --cuda
+./scripts/build_multiarch_docker.sh --all
 ```
 
-## Tính năng Streaming
+Add `--push` to publish the generated images and manifests to Docker Hub.
 
-Streaming cho phép API trả về kết quả từng phần theo thời gian thực, thay vì phải đợi đến khi mô hình tạo ra toàn bộ văn bản. Điều này mang lại trải nghiệm người dùng tốt hơn, đặc biệt là với các câu trả lời dài.
+## Configuration
 
-### Cấu hình Streaming
-
-#### Thông qua biến môi trường
-
-Bạn có thể cấu hình streaming thông qua biến môi trường:
+The app reads these environment variables:
 
 ```bash
-# Bật streaming mặc định
-export VINTERN_STREAM=true
-
-# Các biến môi trường khác
+export VINTERN_MODEL_ID=5CD-AI/Vintern-1B-v3_5
+export VINTERN_STREAM=false
 export VINTERN_MAX_TOKENS=1024
 export VINTERN_TEMPERATURE=0.0
 export VINTERN_DO_SAMPLE=false
@@ -223,201 +133,79 @@ export VINTERN_NUM_BEAMS=3
 export VINTERN_REPETITION_PENALTY=2.5
 ```
 
-#### Khi chạy Docker
-
-Khi chạy Docker container, bạn có thể truyền biến môi trường:
+Docker example:
 
 ```bash
-docker run -e VINTERN_STREAM=true -p 8000:8000 namnhcntt/vintern-image-to-text:latest
+VINTERN_STREAM=true ./scripts/run_docker.sh
 ```
 
-Hoặc sử dụng script `run_docker.sh` với biến môi trường:
+## API
 
-```bash
-VINTERN_STREAM=true ./run_docker.sh
-```
+`GET /api`
 
-#### Trong API Request
+Returns basic service information.
 
-Bạn cũng có thể bật streaming cho từng request cụ thể bằng cách thêm tham số `stream` vào request:
+`GET /api/templates`
+
+Lists available structured prompt templates.
+
+`POST /api/image-to-text`
+
+Accepts JSON with a base64 image payload:
 
 ```json
 {
-  "prompt": "Trích xuất thông tin chính trong ảnh và trả về dạng markdown.",
-  "image": "base64_encoded_image_data",
-  "stream": true
-}
-```
-
-## Phần cứng và hiệu suất
-
-### Độ ưu tiên phần cứng
-
-Ứng dụng sẽ tự động phát hiện và sử dụng phần cứng theo độ ưu tiên sau:
-
-#### Trên macOS:
-1. Apple Silicon (MPS) - cho Mac M1/M2/M3
-2. NVIDIA GPU (CUDA) - cho Mac với GPU NVIDIA (thông qua eGPU)
-3. CPU - khi không có GPU
-
-#### Trên Windows/Linux:
-1. NVIDIA GPU (CUDA) - cho hệ thống có GPU NVIDIA
-2. AMD GPU (ROCm) - cho hệ thống có GPU AMD (hỗ trợ giới hạn)
-3. CPU - khi không có GPU
-
-### Docker Images
-
-Dự án cung cấp ba Dockerfile khác nhau để tối ưu hóa cho từng loại phần cứng:
-
-1. **Dockerfile.arm64**: Tối ưu cho Apple Silicon (ARM64)
-2. **Dockerfile.cuda**: Tối ưu cho NVIDIA GPU với CUDA
-3. **Dockerfile.amd64**: Phiên bản tiêu chuẩn cho CPU (Intel/AMD)
-
-Script `build_docker.sh` sẽ tự động phát hiện phần cứng của bạn và sử dụng Dockerfile phù hợp.
-
-### Phát hiện phần cứng
-
-Ứng dụng sử dụng script `detect_hardware.py` để phát hiện phần cứng có sẵn. Bạn có thể chạy script này để xem thông tin về phần cứng của mình:
-
-```bash
-python detect_hardware.py
-```
-
-Kết quả sẽ hiển thị thông tin về phần cứng được phát hiện và phần cứng tốt nhất sẽ được sử dụng.
-
-### Yêu cầu hệ thống
-
-#### Apple Silicon:
-- macOS 12.0 (Monterey) trở lên
-- Chip Apple M1, M2 hoặc M3
-- Ít nhất 8GB RAM (khuyến nghị 16GB hoặc cao hơn)
-
-#### NVIDIA GPU:
-- NVIDIA GPU với CUDA Compute Capability 3.5 trở lên
-- Driver NVIDIA phiên bản 450.80.02 trở lên
-- Ít nhất 4GB VRAM (khuyến nghị 8GB hoặc cao hơn)
-- Đối với Docker: NVIDIA Container Toolkit đã được cài đặt
-
-#### AMD GPU:
-- Hỗ trợ giới hạn thông qua ROCm
-- Yêu cầu cài đặt thủ công ROCm và PyTorch với hỗ trợ ROCm
-
-#### CPU:
-- Bất kỳ CPU x86_64 hiện đại nào
-- Ít nhất 8GB RAM (khuyến nghị 16GB hoặc cao hơn)
-
-## API Endpoints
-
-### `/api`
-
-Endpoint này cung cấp thông tin về API.
-
-### `/api/image-to-text`
-
-Endpoint này nhận dữ liệu JSON với hình ảnh được mã hóa base64 và prompt.
-
-Ví dụ request:
-
-```json
-{
-  "prompt": "Trích xuất thông tin chính trong ảnh và trả về dạng markdown.",
+  "prompt": "Extract the key information from this image and return Markdown.",
   "image": "base64_encoded_image_data",
   "max_tokens": 1024,
   "temperature": 0.0,
   "do_sample": false,
   "num_beams": 3,
   "repetition_penalty": 2.5,
-  "stream": false
+  "stream": false,
+  "template": "markdown"
 }
 ```
 
-### `/api/upload-image`
+`POST /api/upload-image`
 
-Endpoint này nhận form data với file upload và tham số prompt.
+Accepts multipart form data with an uploaded image or PDF plus prompt options.
 
-## Xử lý sự cố
+## Tests And Fixtures
 
-### Container không khởi động
-
-Nếu container không khởi động, bạn có thể kiểm tra logs:
+The repo includes manual API smoke tests under `tests/`. Start the server first, then run:
 
 ```bash
-docker logs vintern-demo
+python tests/test_quick.py
+python tests/test_pdf_upload.py
 ```
 
-### Cổng 8000 đã được sử dụng
+To regenerate the PDF fixture:
 
-Nếu cổng 8000 đã được sử dụng, bạn có thể chỉ định một cổng khác:
+```bash
+python tests/create_test_pdf.py
+```
+
+## Troubleshooting
+
+If port `8000` is already in use, run `python app.py --port 8080` or map Docker to another host port:
 
 ```bash
 docker run --name vintern-demo -p 8080:8000 -d namnhcntt/vintern-image-to-text:latest
 ```
 
-Sau đó, bạn có thể truy cập ứng dụng tại http://localhost:8080
+If the container does not start, check logs:
 
-### Lỗi "context deadline exceeded" khi chạy build_multiarch_docker.sh
+```bash
+docker logs vintern-demo
+```
 
-Nếu bạn gặp lỗi "context deadline exceeded" khi truy cập docker.sock, hãy thử các giải pháp sau:
+For Apple Silicon MPS errors, set:
 
-1. Khởi động lại Docker daemon:
-   ```bash
-   # Trên macOS
-   killall Docker && open /Applications/Docker.app
+```bash
+export PYTORCH_ENABLE_MPS_FALLBACK=1
+```
 
-   # Trên Linux
-   sudo systemctl restart docker
-   ```
+## License
 
-2. Xóa builder instance hiện tại và tạo lại:
-   ```bash
-   docker buildx rm multiarch-builder
-   docker buildx create --name multiarch-builder --driver docker-container --use
-   ```
-
-3. Kiểm tra quyền truy cập vào socket Docker:
-   ```bash
-   # Trên Linux
-   sudo chmod 666 /var/run/docker.sock
-   ```
-
-4. Nếu vẫn gặp lỗi, hãy thử build cho từng kiến trúc riêng biệt:
-   ```bash
-   # Chỉ build cho ARM64
-   ./build_multiarch_docker.sh --arm64
-
-   # Hoặc chỉ build cho AMD64
-   ./build_multiarch_docker.sh --amd64
-   ```
-
-### Lỗi "CUDA out of memory"
-
-Nếu bạn gặp lỗi này, hãy thử:
-1. Giảm kích thước ảnh đầu vào
-2. Đóng các ứng dụng khác đang sử dụng GPU
-3. Khởi động lại máy tính
-
-### Lỗi "MPS operation not implemented"
-
-Nếu bạn gặp lỗi này trên Apple Silicon, hãy đảm bảo biến môi trường `PYTORCH_ENABLE_MPS_FALLBACK=1` đã được thiết lập. Script `run_docker.sh` sẽ tự động thiết lập biến này.
-
-### Lỗi "NVIDIA driver not found"
-
-Nếu bạn gặp lỗi này, hãy đảm bảo:
-1. Driver NVIDIA đã được cài đặt
-2. NVIDIA Container Toolkit đã được cài đặt (cho Docker)
-3. Lệnh `nvidia-smi` hoạt động bình thường
-
-## Thông tin về mô hình
-
-Mô hình Vintern-1B-v3.5 là một mô hình đa phương thức được fine-tune từ InternVL2.5-1B, với trọng tâm vào khả năng ngôn ngữ tiếng Việt. Nó xuất sắc trong:
-
-- Nhận dạng văn bản
-- OCR
-- Hiểu tài liệu tiếng Việt
-- Xử lý hóa đơn, văn bản pháp lý, chữ viết tay và bảng biểu
-
-Để biết thêm thông tin về mô hình, hãy truy cập [trang Hugging Face](https://huggingface.co/5CD-AI/Vintern-1B-v3_5).
-
-## Giấy phép
-
-Mô hình Vintern-1B-v3.5 được phân phối theo giấy phép của 5CD-AI. Vui lòng tham khảo trang Hugging Face của mô hình để biết thêm chi tiết về giấy phép.
+See [LICENSE](LICENSE). The Vintern model is distributed under the terms published by 5CD-AI on the model's Hugging Face page.

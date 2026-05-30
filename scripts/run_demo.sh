@@ -1,9 +1,12 @@
 #!/bin/bash
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+PROJECT_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
+cd "$PROJECT_ROOT" || exit 1
+FRONTEND_INDEX="frontend/index.html"
 
 # Check if we're in the correct directory
 if [ ! -f "app.py" ] || [ ! -f "requirements.txt" ]; then
-    echo "Error: This script must be run from the project directory."
-    echo "Please cd to the project directory first."
+    echo "Error: app.py or requirements.txt not found in project root."
     exit 1
 fi
 
@@ -184,9 +187,9 @@ echo "Using port $PORT for the API server."
 
 # Define cleanup function
 cleanup() {
-    if [ -f "index.html.bak" ]; then
-        echo "Restoring original index.html file..."
-        mv index.html.bak index.html
+    if [ -f "$FRONTEND_INDEX.bak" ]; then
+        echo "Restoring original frontend/index.html file..."
+        mv "$FRONTEND_INDEX.bak" "$FRONTEND_INDEX"
     fi
 
     if [ -n "$SERVER_PID" ]; then
@@ -205,8 +208,8 @@ cleanup() {
 
 # Update the port in the HTML file temporarily
 if [ $PORT -ne 8000 ]; then
-    echo "Updating API URL in index.html to use port $PORT..."
-    sed -i.bak "s/localhost:8000/localhost:$PORT/g" index.html
+    echo "Updating API URL in frontend/index.html to use port $PORT..."
+    sed -i.bak "s/localhost:8000/localhost:$PORT/g" "$FRONTEND_INDEX"
 fi
 
 # Set trap for cleanup
@@ -244,14 +247,14 @@ sleep 3
 # Attempt to open the HTML file in a browser
 echo "Opening the web interface..."
 if command -v xdg-open &> /dev/null; then
-    xdg-open index.html
+    xdg-open "$FRONTEND_INDEX"
 elif command -v open &> /dev/null; then
-    open index.html
+    open "$FRONTEND_INDEX"
 elif command -v start &> /dev/null; then
-    start index.html
+    start "$FRONTEND_INDEX"
 else
     echo "Could not automatically open the web interface."
-    echo "Please open 'index.html' in your web browser manually."
+    echo "Please open '$FRONTEND_INDEX' in your web browser manually."
 fi
 
 echo ""

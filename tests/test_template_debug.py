@@ -1,12 +1,16 @@
 #!/usr/bin/env python3
+from pathlib import Path
+
 import requests
+
+FIXTURE_PDF = Path(__file__).parent / "fixtures" / "test_invoice.pdf"
 
 def test_template_debug():
     url = "http://localhost:8000/api/upload-image"
     
     # Test với template rõ ràng
     files = {
-        'file': ('test_invoice.pdf', open('test_invoice.pdf', 'rb'), 'application/pdf')
+        'file': ('test_invoice.pdf', open(FIXTURE_PDF, 'rb'), 'application/pdf')
     }
     
     data = {

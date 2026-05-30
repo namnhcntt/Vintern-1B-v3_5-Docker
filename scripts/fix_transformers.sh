@@ -46,7 +46,7 @@ if [[ $(uname -m) == "arm64" && $(uname) == "Darwin" ]]; then
     # Add note about MPS fallback
     echo ""
     echo "Note: Some PyTorch operations are not yet implemented for MPS."
-    echo "The run_demo.sh script will automatically set PYTORCH_ENABLE_MPS_FALLBACK=1"
+    echo "The scripts/run_demo.sh script will automatically set PYTORCH_ENABLE_MPS_FALLBACK=1"
     echo "to use CPU as fallback for unsupported operations."
     echo ""
 
@@ -82,4 +82,4 @@ echo "Installing transformers 4.38.0 or newer..."
 # Install the newer transformers version
 $PIP_CMD install --upgrade "transformers>=4.38.0"
 
-echo "Done! Now you can run ./run_demo.sh to start the demo."
+echo "Done! Now you can run ./scripts/run_demo.sh to start the demo."

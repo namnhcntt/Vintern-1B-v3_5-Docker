@@ -1,4 +1,4 @@
-FROM --platform=linux/arm64 python:3.9-slim AS builder
+FROM --platform=linux/amd64 python:3.9-slim AS builder
 
 WORKDIR /app
 
@@ -18,7 +18,7 @@ RUN pip install --no-cache-dir --upgrade pip && \
     pip install --no-cache-dir -r requirements.txt
 
 # Second stage: runtime image
-FROM --platform=linux/arm64 python:3.9-slim
+FROM --platform=linux/amd64 python:3.9-slim
 
 WORKDIR /app
 
@@ -29,12 +29,11 @@ ENV PATH="/opt/venv/bin:$PATH"
 # Copy application code
 COPY app.py .
 COPY detect_hardware.py .
-COPY static/ ./static/
-COPY index.html .
+COPY frontend/ ./frontend/
+
 # Set environment variables
 ENV PYTHONDONTWRITEBYTECODE=1
 ENV PYTHONUNBUFFERED=1
-ENV PYTORCH_ENABLE_MPS_FALLBACK=1
 
 # Set Vintern-specific environment variables
 ENV VINTERN_STREAM=false

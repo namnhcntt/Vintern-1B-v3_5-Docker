@@ -1,37 +1,24 @@
 #!/bin/bash
 
 # Script to build multi-architecture Docker images for Vintern-1B Image-to-Text Demo
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+PROJECT_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
+cd "$PROJECT_ROOT" || exit 1
 
 # Set image name and tag
-IMAGE_NAME="vietprogrammer/vintern-image-to-text"
+IMAGE_NAME="namnhcntt/vintern-image-to-text"
 VERSION="1.1.0"
 TAG="latest"
 
 # Check if we're in the correct directory
 if [ ! -f "app.py" ]; then
-    echo "Error: This script must be run from the project root directory."
-    echo "Please cd to the project root directory first."
+    echo "Error: app.py not found in project root."
     exit 1
 fi
 
-# Ensure static directory exists
-if [ ! -d "static" ]; then
-    echo "Error: static directory not found."
-    echo "Please create the static directory and move index.html into it."
+if [ ! -f "frontend/index.html" ]; then
+    echo "Error: frontend/index.html not found."
     exit 1
-fi
-
-# Ensure index.html is in the root directory
-if [ ! -f "index.html" ]; then
-    echo "Error: index.html not found in root directory."
-    echo "Please create index.html in the root directory."
-    exit 1
-fi
-
-# Create symbolic link from static/index.html to index.html if it doesn't exist
-if [ ! -f "static/index.html" ]; then
-    echo "Creating symbolic link from static/index.html to index.html..."
-    ln -sf ../index.html static/index.html
 fi
 
 # Check if Docker is installed
@@ -145,9 +132,9 @@ if [ "$BUILD_ARM64" = true ]; then
 
     # Build the ARM64 image
     if [ "$PUSH" = true ]; then
-        docker buildx build --platform linux/arm64 -f Dockerfile.arm64 -t ${IMAGE_NAME}:arm64 -t ${IMAGE_NAME}:${VERSION}-arm64 --push .
+        docker buildx build --platform linux/arm64 -f docker/Dockerfile.arm64 -t ${IMAGE_NAME}:arm64 -t ${IMAGE_NAME}:${VERSION}-arm64 --push .
     else
-        docker buildx build --platform linux/arm64 -f Dockerfile.arm64 -t ${IMAGE_NAME}:arm64 -t ${IMAGE_NAME}:${VERSION}-arm64 --load .
+        docker buildx build --platform linux/arm64 -f docker/Dockerfile.arm64 -t ${IMAGE_NAME}:arm64 -t ${IMAGE_NAME}:${VERSION}-arm64 --load .
     fi
 
     # Check if build was successful
@@ -165,9 +152,9 @@ if [ "$BUILD_AMD64" = true ]; then
 
     # Build the AMD64 image
     if [ "$PUSH" = true ]; then
-        docker buildx build --platform linux/amd64 -f Dockerfile.amd64 -t ${IMAGE_NAME}:amd64 -t ${IMAGE_NAME}:${VERSION}-amd64 --push .
+        docker buildx build --platform linux/amd64 -f docker/Dockerfile.amd64 -t ${IMAGE_NAME}:amd64 -t ${IMAGE_NAME}:${VERSION}-amd64 --push .
     else
-        docker buildx build --platform linux/amd64 -f Dockerfile.amd64 -t ${IMAGE_NAME}:amd64 -t ${IMAGE_NAME}:${VERSION}-amd64 --load .
+        docker buildx build --platform linux/amd64 -f docker/Dockerfile.amd64 -t ${IMAGE_NAME}:amd64 -t ${IMAGE_NAME}:${VERSION}-amd64 --load .
     fi
 
     # Check if build was successful
@@ -185,9 +172,9 @@ if [ "$BUILD_CUDA" = true ]; then
 
     # Build the CUDA image
     if [ "$PUSH" = true ]; then
-        docker buildx build --platform linux/amd64 -f Dockerfile.cuda -t ${IMAGE_NAME}:cuda -t ${IMAGE_NAME}:${VERSION}-cuda --push .
+        docker buildx build --platform linux/amd64 -f docker/Dockerfile.cuda -t ${IMAGE_NAME}:cuda -t ${IMAGE_NAME}:${VERSION}-cuda --push .
     else
-        docker buildx build --platform linux/amd64 -f Dockerfile.cuda -t ${IMAGE_NAME}:cuda -t ${IMAGE_NAME}:${VERSION}-cuda --load .
+        docker buildx build --platform linux/amd64 -f docker/Dockerfile.cuda -t ${IMAGE_NAME}:cuda -t ${IMAGE_NAME}:${VERSION}-cuda --load .
     fi
 
     # Check if build was successful
@@ -224,7 +211,7 @@ echo "To run the container with model cache volume mapping, use:"
 echo "docker run -v \$HOME/.cache/huggingface:/root/.cache/huggingface -p 8000:8000 ${IMAGE_NAME}:<tag>"
 echo ""
 echo "Or use the run_docker.sh script (recommended):"
-echo "./run_docker.sh"
+echo "./scripts/run_docker.sh"
 echo ""
 echo "Available tags:"
 if [ "$BUILD_ARM64" = true ]; then

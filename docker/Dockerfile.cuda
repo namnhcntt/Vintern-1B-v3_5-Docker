@@ -41,8 +41,7 @@ ENV PATH="/opt/venv/bin:$PATH"
 # Copy application code
 COPY app.py .
 COPY detect_hardware.py .
-COPY static/ ./static/
-COPY index.html .
+COPY frontend/ ./frontend/
 # Set environment variables
 ENV PYTHONDONTWRITEBYTECODE=1
 ENV PYTHONUNBUFFERED=1

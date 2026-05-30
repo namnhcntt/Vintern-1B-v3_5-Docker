@@ -1,4 +1,4 @@
-FROM --platform=linux/amd64 python:3.9-slim AS builder
+FROM python:3.9-slim AS builder
 
 WORKDIR /app
 
@@ -18,7 +18,7 @@ RUN pip install --no-cache-dir --upgrade pip && \
     pip install --no-cache-dir -r requirements.txt
 
 # Second stage: runtime image
-FROM --platform=linux/amd64 python:3.9-slim
+FROM python:3.9-slim
 
 WORKDIR /app
 
@@ -28,21 +28,12 @@ ENV PATH="/opt/venv/bin:$PATH"
 
 # Copy application code
 COPY app.py .
-COPY detect_hardware.py .
-COPY static/ ./static/
-COPY index.html .
+COPY frontend/ ./frontend/
 
 # Set environment variables
 ENV PYTHONDONTWRITEBYTECODE=1
 ENV PYTHONUNBUFFERED=1
-
-# Set Vintern-specific environment variables
-ENV VINTERN_STREAM=false
-ENV VINTERN_MAX_TOKENS=1024
-ENV VINTERN_TEMPERATURE=0.0
-ENV VINTERN_DO_SAMPLE=false
-ENV VINTERN_NUM_BEAMS=3
-ENV VINTERN_REPETITION_PENALTY=2.5
+ENV PYTORCH_ENABLE_MPS_FALLBACK=1
 
 # Expose port for API
 EXPOSE 8000

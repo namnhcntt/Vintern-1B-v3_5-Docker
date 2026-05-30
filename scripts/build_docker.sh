@@ -1,37 +1,24 @@
 #!/bin/bash
 
 # Script to build the Docker image for Vintern-1B Image-to-Text Demo
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+PROJECT_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
+cd "$PROJECT_ROOT" || exit 1
 
 # Set image name and tag
-IMAGE_NAME="vietprogrammer/vintern-image-to-text"
+IMAGE_NAME="namnhcntt/vintern-image-to-text"
 VERSION="1.1.0"
 TAG="latest"
 
 # Check if we're in the correct directory
 if [ ! -f "app.py" ]; then
-    echo "Error: This script must be run from the python-demo directory."
-    echo "Please cd to the python-demo directory first."
+    echo "Error: app.py not found in project root."
     exit 1
 fi
 
-# Ensure static directory exists
-if [ ! -d "static" ]; then
-    echo "Error: static directory not found."
-    echo "Please create the static directory and move index.html into it."
+if [ ! -f "frontend/index.html" ]; then
+    echo "Error: frontend/index.html not found."
     exit 1
-fi
-
-# Ensure index.html is in the root directory
-if [ ! -f "index.html" ]; then
-    echo "Error: index.html not found in root directory."
-    echo "Please create index.html in the root directory."
-    exit 1
-fi
-
-# Create symbolic link from static/index.html to index.html if it doesn't exist
-if [ ! -f "static/index.html" ]; then
-    echo "Creating symbolic link from static/index.html to index.html..."
-    ln -sf ../index.html static/index.html
 fi
 
 # Detect architecture
@@ -52,19 +39,19 @@ HARDWARE_TYPE=""
 
 if [ "$OS" = "Darwin" ] && [ "$ARCH" = "arm64" ]; then
     # macOS on Apple Silicon
-    DOCKERFILE="Dockerfile.arm64"
+    DOCKERFILE="docker/Dockerfile.arm64"
     PLATFORM="linux/arm64"
     HARDWARE_TYPE="Apple Silicon"
     TAG="arm64"
 elif [ $NVIDIA_GPU -eq 1 ]; then
     # System with NVIDIA GPU
-    DOCKERFILE="Dockerfile.cuda"
+    DOCKERFILE="docker/Dockerfile.cuda"
     PLATFORM="linux/amd64"
     HARDWARE_TYPE="NVIDIA GPU"
     TAG="cuda"
 else
     # Default to AMD64
-    DOCKERFILE="Dockerfile.amd64"
+    DOCKERFILE="docker/Dockerfile.amd64"
     PLATFORM="linux/amd64"
     HARDWARE_TYPE="CPU"
     TAG="amd64"
@@ -101,7 +88,7 @@ if [ $? -eq 0 ]; then
     echo "docker run -v \$HOME/.cache/huggingface:/root/.cache/huggingface -p 8000:8000 $IMAGE_NAME:$TAG"
     echo ""
     echo "Or use the run_docker.sh script (recommended):"
-    echo "./run_docker.sh"
+    echo "./scripts/run_docker.sh"
     echo ""
     echo "The run_docker.sh script automatically creates a volume mapping to your local"
     echo "Hugging Face cache directory, preventing model re-downloads on container startup."

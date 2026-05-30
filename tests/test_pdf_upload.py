@@ -1,9 +1,13 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
+from pathlib import Path
+
 import requests
 import json
 import time
+
+FIXTURE_PDF = Path(__file__).parent / "fixtures" / "test_invoice.pdf"
 
 def test_pdf_upload():
     """Test PDF upload functionality"""
@@ -26,7 +30,7 @@ def test_pdf_upload():
         
         # Prepare form data
         files = {
-            'file': ('test_invoice.pdf', open('test_invoice.pdf', 'rb'), 'application/pdf')
+            'file': ('test_invoice.pdf', open(FIXTURE_PDF, 'rb'), 'application/pdf')
         }
         
         data = {
@@ -86,7 +90,7 @@ def test_image_endpoint():
     
     # Convert PDF to base64 for testing (this won't work for PDF, but tests the endpoint)
     try:
-        with open('test_invoice.pdf', 'rb') as f:
+        with open(FIXTURE_PDF, 'rb') as f:
             import base64
             pdf_data = f.read()
             # This is just for testing - PDF won't work with image endpoint

@@ -1,9 +1,12 @@
 #!/bin/bash
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+PROJECT_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
+cd "$PROJECT_ROOT" || exit 1
 
 # Script to run the Docker container for Vintern-1B Image-to-Text Demo
 
 # Set image name and container name
-IMAGE_NAME="vietprogrammer/vintern-image-to-text"
+IMAGE_NAME="namnhcntt/vintern-image-to-text"
 CONTAINER_NAME="vintern-demo"
 PORT=8000
 
@@ -53,7 +56,7 @@ if ! docker image inspect $IMAGE_NAME:$TAG &> /dev/null; then
     # Check if latest tag exists
     if ! docker image inspect $IMAGE_NAME:latest &> /dev/null; then
         echo "Error: Docker image $IMAGE_NAME:latest not found either."
-        echo "Please build the image first using ./build_docker.sh"
+        echo "Please build the image first using ./scripts/build_docker.sh"
         exit 1
     else
         echo "Using $IMAGE_NAME:latest instead."

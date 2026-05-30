@@ -1,4 +1,7 @@
 @echo off
+set SCRIPT_DIR=%~dp0
+pushd "%SCRIPT_DIR%.."
+
 echo Setting up Virtual Environment for Vintern-1B Project
 echo ====================================================
 echo.
@@ -6,15 +9,17 @@ echo.
 REM Check if we're in the correct directory
 if not exist "app.py" (
     echo Error: This script must be run from the project directory.
-    echo Please cd to the project directory first.
+    echo app.py was not found in the project root.
     pause
+    popd
     exit /b 1
 )
 
 if not exist "requirements.txt" (
     echo Error: requirements.txt not found in current directory.
-    echo Please ensure you're in the correct project directory.
+    echo Please ensure the project root contains requirements.txt.
     pause
+    popd
     exit /b 1
 )
 
@@ -31,6 +36,7 @@ if %errorlevel% == 0 (
         echo Error: Python is not installed or not in PATH.
         echo Please install Python 3.8+ before running this script.
         pause
+        popd
         exit /b 1
     )
 )
@@ -49,6 +55,7 @@ if exist "%VENV_DIR%" (
     ) else (
         echo Using existing virtual environment.
         pause
+        popd
         exit /b 0
     )
 )
@@ -61,6 +68,7 @@ if %errorlevel% neq 0 (
     echo Error: Failed to create virtual environment.
     echo Please ensure you have the venv module installed.
     pause
+    popd
     exit /b 1
 )
 
@@ -84,7 +92,7 @@ if %errorlevel% == 0 (
     echo Setup completed successfully!
     echo Virtual environment is ready at '%VENV_DIR%'.
     echo.
-    echo To run the demo, use: run_demo.sh
+    echo To run the demo, use: scripts\run_demo.sh
     echo The script will automatically use the virtual environment.
 ) else (
     echo.
@@ -93,3 +101,4 @@ if %errorlevel% == 0 (
 )
 
 pause
+popd

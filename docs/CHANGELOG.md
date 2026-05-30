@@ -18,9 +18,9 @@ và dự án này tuân theo [Semantic Versioning](https://semver.org/spec/v2.0.
   - `1.1.0-cuda`: Tag cho NVIDIA CUDA
 
 ### Changed
-- Cập nhật `build_docker.sh` để hỗ trợ tag phiên bản
-- Cập nhật `build_multiarch_docker.sh` để tạo manifest đa kiến trúc với tag phiên bản
-- Cập nhật `run_docker.sh` để sử dụng tên image thống nhất
+- Cập nhật `scripts/build_docker.sh` để hỗ trợ tag phiên bản
+- Cập nhật `scripts/build_multiarch_docker.sh` để tạo manifest đa kiến trúc với tag phiên bản
+- Cập nhật `scripts/run_docker.sh` để sử dụng tên image thống nhất
 - Cải thiện quy trình build và deployment Docker images
 
 ### Fixed
